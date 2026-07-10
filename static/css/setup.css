@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+
+  padding: 0;
+
+  background: #081b33;
+
+  font-family: Arial, sans-serif;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  height: 100vh;
+
+  color: white;
+}
+
+.splash {
+  text-align: center;
+}
+
+.logo {
+  font-size: 80px;
+
+  margin-bottom: 25px;
+}
+
+.loader {
+  width: 55px;
+
+  height: 55px;
+
+  margin: auto;
+
+  margin-top: 35px;
+
+  border-radius: 50%;
+
+  border: 6px solid white;
+
+  border-top: 6px solid cyan;
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

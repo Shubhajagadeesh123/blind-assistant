@@ -1,0 +1,7 @@
+-r requirements.txt
+
+easyocr
+torch
+torchvision
+opencv-python-headless
+pillow

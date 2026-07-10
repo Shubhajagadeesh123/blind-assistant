@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>AIVisualAssistant</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/setup.css') }}" />
+  </head>
+
+  <body>
+    <div class="splash">
+      <div class="logo">👁️</div>
+
+      <h1>AIVisualAssistant</h1>
+
+      <p>Helping You Navigate the World</p>
+
+      <div class="loader"></div>
+    </div>
+
+    <script>
+      setTimeout(() => {
+        window.location.href = "/welcome";
+      }, 2500);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlindMate - AI Navigation Assistant</title>
+
+    <!-- Bootstrap CSS for responsive design -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- TensorFlow.js for object detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+
+    <style>
+      body {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        color: white;
+      }
+
+      .main-container {
+        max-width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        height: 70vh;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      #webcam {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      #canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .control-panel {
+        height: 30vh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .main-button {
+        width: 200px;
+        height: 80px;
+        border-radius: 40px;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(45deg, #28a745, #20c997);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .main-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6);
+      }
+
+      .main-button:active {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+      }
+
+      .main-button.listening {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        animation: pulse 1.5s infinite;
+      }
+
+      .main-button.navigating {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        50% {
+          box-shadow: 0 6px 30px rgba(231, 76, 60, 0.8);
+        }
+        100% {
+          box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+      }
+
+      .status-display {
+        text-align: center;
+        min-height: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .status-text {
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+      }
+
+      .instruction-text {
+        font-size: 1rem;
+        opacity: 0.8;
+        font-style: italic;
+      }
+
+      .detection-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 15px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        display: none;
+      }
+
+      .navigation-info {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 15px;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .emergency-stop {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #dc3545;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        display: none;
+        cursor: pointer;
+      }
+
+      /* Mobile optimizations */
+      @media (max-width: 768px) {
+        .video-container {
+          height: 60vh;
+        }
+
+        .control-panel {
+          height: 40vh;
+        }
+
+        .main-button {
+          width: 180px;
+          height: 70px;
+          font-size: 1.3rem;
+        }
+      }
+
+      /* Enhanced error display */
+      .error-display {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(220, 53, 69, 0.95);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        display: none;
+        max-width: 90%;
+        text-align: center;
+      }
+
+      .error-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .error-message i {
+        font-size: 1.5rem;
+      }
+
+      .error-message strong {
+        font-size: 1.1rem;
+      }
+
+      .error-message p {
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      /* Speech fallback display */
+      .speech-fallback {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 123, 255, 0.95);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        display: none;
+        max-width: 90%;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: bold;
+      }
+
+      /* Enhanced navigation info overlay */
+      .navigation-info {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 20px;
+        border-radius: 15px;
+        display: none;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .navigation-info h4 {
+        margin: 0 0 10px 0;
+        color: #28a745;
+        font-size: 1.1rem;
+      }
+
+      .navigation-info div {
+        margin: 5px 0;
+        font-size: 1rem;
+        line-height: 1.4;
+      }
+
+      #currentStep {
+        font-weight: bold;
+        color: #ffffff;
+      }
+
+      #stepDistance {
+        color: #ffc107;
+        font-size: 0.9rem;
+      }
+
+      /* High contrast accessibility */
+      @media (prefers-contrast: high) {
+        .main-button {
+          border: 2px solid white;
+        }
+
+        .error-display,
+        .speech-fallback {
+          border: 2px solid white;
+        }
+      }
+
+      /* Reduced motion accessibility */
+      @media (prefers-reduced-motion: reduce) {
+        .main-button {
+          transition: none;
+        }
+
+        @keyframes pulse {
+          0%,
+          100% {
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+          }
+        }
+      }
+
+      /* Screen reader accessibility */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+      <!-- Video Feed with Object Detection -->
+      <div class="video-container">
+        <video id="webcam" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <!-- Detection Status Overlay -->
+        <div id="detectionOverlay" class="detection-overlay">
+          <i class="fas fa-eye"></i> Detecting Objects
+        </div>
+
+        <!-- Enhanced Navigation Info Overlay -->
+        <div id="navigationInfo" class="navigation-info">
+          <h4><i class="fas fa-route"></i> Current Direction</h4>
+          <div id="currentStep">Ready to navigate</div>
+          <div id="stepDistance"></div>
+        </div>
+
+        <!-- Emergency Stop Button -->
+        <button id="emergencyStop" class="emergency-stop">
+          <i class="fas fa-stop"></i>
+        </button>
+      </div>
+
+      <!-- Control Panel -->
+      <div class="control-panel">
+        <div class="status-display">
+          <div id="statusText" class="status-text">Ready to Navigate</div>
+          <div id="instructionText" class="instruction-text">
+            Press the button or Volume Up key to start
+          </div>
+        </div>
+
+        <!-- Main Navigation Button -->
+        <button id="mainButton" class="main-button">
+          <i class="fas fa-microphone"></i> Start Listening
+        </button>
+      </div>
+    </div>
+
+    <!-- Enhanced Error Display -->
+    <div id="errorDisplay" class="error-display" role="alert" aria-live="assertive">
+      <!-- Error messages will be dynamically inserted here -->
+    </div>
+
+    <!-- Speech Fallback Display -->
+    <div id="speechFallbackDisplay" class="speech-fallback" role="status" aria-live="polite">
+      <!-- Speech fallback text will be displayed here when speech synthesis fails -->
+    </div>
+
+    <!-- Screen reader announcements for accessibility -->
+    <div id="srAnnouncements" class="sr-only" role="status" aria-live="polite"></div>
+
+    <script src="{{ url_for('static', filename='js/navigation.js') }}"></script>
+  </body>
+</html>

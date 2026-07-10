@@ -1,0 +1,413 @@
+/* ==========================
+   AIVisualAssistant
+   Onboarding Wizard
+=============================*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: #071a2d;
+  overflow-x: hidden;
+  color: white;
+}
+
+.background {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0b2d52, #081c35, #041322);
+
+  z-index: -1;
+}
+
+.wizard-container {
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 40px;
+}
+
+.wizard-card {
+  width: 100%;
+  max-width: 900px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  backdrop-filter: blur(18px);
+
+  border-radius: 25px;
+
+  padding: 45px;
+
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+}
+
+/*=========================
+Progress
+=========================*/
+
+.progress-area {
+  width: 100%;
+  max-width: 900px;
+
+  margin-bottom: 30px;
+}
+
+.progress-bar {
+  width: 100%;
+
+  height: 12px;
+
+  background: #24384f;
+
+  border-radius: 50px;
+
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 14%;
+
+  height: 100%;
+
+  background: #00d9ff;
+
+  transition: 0.4s;
+}
+
+#stepText {
+  text-align: right;
+
+  margin-top: 10px;
+
+  color: #cfd8dc;
+}
+
+/*=========================
+Steps
+=========================*/
+
+.step {
+  display: none;
+
+  animation: fade 0.4s ease;
+}
+
+.step.active {
+  display: block;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+/*=========================
+Typography
+=========================*/
+
+.logo {
+  font-size: 80px;
+
+  text-align: center;
+
+  margin-bottom: 20px;
+}
+
+h1 {
+  text-align: center;
+
+  font-size: 40px;
+
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 32px;
+
+  margin-bottom: 20px;
+}
+
+p {
+  color: #dce3ea;
+
+  line-height: 1.8;
+
+  margin-bottom: 30px;
+}
+
+/*=========================
+Voice Box
+=========================*/
+
+.voice-box {
+  background: #12385f;
+
+  border-left: 5px solid cyan;
+
+  padding: 20px;
+
+  border-radius: 12px;
+
+  margin-bottom: 35px;
+}
+
+/*=========================
+Language Buttons
+=========================*/
+
+.language-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 18px;
+}
+
+.langBtn {
+  padding: 18px;
+
+  border: none;
+
+  border-radius: 15px;
+
+  background: #183d65;
+
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  transition: 0.25s;
+}
+
+.langBtn:hover {
+  background: #00bcd4;
+
+  transform: scale(1.04);
+}
+
+.langBtn.selected {
+  background: #00d9ff;
+
+  color: #071a2d;
+
+  font-weight: bold;
+}
+
+/*=========================
+Permission Cards
+=========================*/
+
+.permission-card {
+  background: #153455;
+
+  padding: 20px;
+
+  margin-bottom: 18px;
+
+  border-radius: 15px;
+
+  font-size: 20px;
+}
+
+.permission-card span {
+  display: block;
+
+  margin-top: 8px;
+
+  font-size: 15px;
+
+  color: #d7dde3;
+}
+
+/*=========================
+Forms
+=========================*/
+
+.form-group {
+  margin-bottom: 30px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+
+  padding: 15px;
+
+  margin-bottom: 15px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #eef2f6;
+
+  font-size: 16px;
+}
+
+input:focus {
+  outline: 3px solid cyan;
+}
+
+/*=========================
+Voice Test
+=========================*/
+
+.voice-test {
+  font-size: 28px;
+
+  text-align: center;
+
+  margin: 30px 0;
+
+  font-weight: bold;
+
+  color: #00d9ff;
+}
+
+#voiceStatus {
+  margin-top: 20px;
+
+  text-align: center;
+
+  font-size: 18px;
+}
+
+/*=========================
+Summary
+=========================*/
+
+.summary-list {
+  margin: 30px 0;
+
+  padding-left: 25px;
+}
+
+.summary-list li {
+  margin-bottom: 15px;
+
+  font-size: 19px;
+}
+
+.finish-icon {
+  text-align: center;
+
+  font-size: 90px;
+
+  margin-bottom: 20px;
+}
+
+/*=========================
+Buttons
+=========================*/
+
+button {
+  border: none;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.nextBtn,
+#allowPermissions,
+#startVoiceTest,
+#finishSetup {
+  background: #00d9ff;
+
+  color: #071a2d;
+
+  padding: 16px 35px;
+
+  border-radius: 14px;
+
+  font-size: 18px;
+
+  font-weight: 600;
+}
+
+.backBtn {
+  background: #26374d;
+
+  color: white;
+
+  padding: 16px 35px;
+
+  border-radius: 14px;
+}
+
+button:hover {
+  transform: translateY(-3px);
+}
+
+.navigation {
+  display: flex;
+
+  justify-content: space-between;
+
+  margin-top: 35px;
+}
+
+/*=========================
+Responsive
+=========================*/
+
+@media (max-width: 768px) {
+  .language-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-card {
+    padding: 25px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .logo {
+    font-size: 60px;
+  }
+
+  .navigation {
+    flex-direction: column;
+
+    gap: 15px;
+  }
+
+  .navigation button {
+    width: 100%;
+  }
+}

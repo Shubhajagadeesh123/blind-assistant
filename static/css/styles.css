@@ -1,0 +1,1002 @@
+/* ===========================================
+   AIVisualAssistant V2
+=========================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+:root {
+  --bg: #07141f;
+  --card: #102434;
+  --primary: #00bcd4;
+  --secondary: #163a54;
+  --danger: #ff4d4d;
+  --success: #29d66b;
+  --text: #ffffff;
+  --text2: #b8c5d3;
+}
+
+body {
+  background: linear-gradient(135deg, #04111d, #081f33);
+
+  color: var(--text);
+
+  min-height: 100vh;
+
+  overflow-x: hidden;
+}
+
+.background-blur {
+  position: fixed;
+
+  width: 100%;
+
+  height: 100%;
+
+  background:
+    radial-gradient(circle at top left, #00bcd420, transparent 45%),
+    radial-gradient(circle at bottom right, #0099ff20, transparent 40%);
+
+  z-index: -1;
+}
+
+.container-fluid {
+  padding-bottom: 80px;
+}
+
+.vision-card {
+  background: #102434;
+
+  border-radius: 30px;
+
+  padding: 25px;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.vision-top {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 20px;
+}
+
+.vision-top h2 {
+  font-size: 30px;
+}
+
+.vision-top p {
+  color: var(--text2);
+}
+
+.camera-box {
+  width: 100%;
+
+  aspect-ratio: 16/9;
+
+  min-height: 350px;
+
+  max-height: 650px;
+}
+
+#webcam {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+}
+#canvas {
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  pointer-events: none;
+}
+
+.loading-overlay {
+  position: absolute;
+
+  top: 50%;
+
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background: rgba(0, 0, 0, 0.8);
+
+  padding: 25px;
+
+  border-radius: 20px;
+}
+/* ===================================================
+   AI ASSISTANT PANEL
+=================================================== */
+
+.assistant-panel {
+  background: #102434;
+
+  border-radius: 30px;
+
+  padding: 25px;
+
+  height: 100%;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.assistant-header {
+  text-align: center;
+
+  padding-bottom: 15px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.assistant-header h2 {
+  font-size: 30px;
+
+  font-weight: 700;
+
+  margin-bottom: 10px;
+}
+
+.assistant-header p {
+  color: var(--text2);
+
+  margin: 0;
+}
+
+/* ============================================= */
+
+.assistant-response {
+  background: #18364d;
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  font-size: 17px;
+
+  line-height: 1.7;
+
+  color: #fff;
+
+  min-height: 100px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+}
+
+/* ============================================= */
+
+.action-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 15px;
+
+  margin-top: 10px;
+}
+
+/* ============================================= */
+
+.action-card {
+  background: #16364f;
+
+  border: none;
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  color: white;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+
+  min-height: 120px;
+
+  font-size: 17px;
+
+  font-weight: 600;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.action-card:hover {
+  transform: translateY(-5px);
+
+  background: #00bcd4;
+}
+
+.action-card i {
+  font-size: 32px;
+}
+
+/* ============================================= */
+
+.action-card.danger {
+  background: #a81d2d;
+}
+
+.action-card.danger:hover {
+  background: #d62839;
+}
+
+/* ============================================= */
+
+.action-card.emergency {
+  background: #ff3b3b;
+
+  animation: sosPulse 2s infinite;
+}
+
+.action-card.emergency:hover {
+  background: #ff0000;
+}
+
+/* ============================================= */
+
+.settings-box {
+  margin-top: 10px;
+}
+
+.settings-box h4 {
+  margin-bottom: 10px;
+
+  font-size: 18px;
+}
+
+.settings-box select {
+  background: #18364d;
+
+  color: white;
+
+  border: none;
+
+  padding: 12px;
+
+  border-radius: 12px;
+
+  font-size: 16px;
+}
+
+.settings-box select:focus {
+  outline: none;
+
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.35);
+}
+
+/* ============================================= */
+
+.live-status {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 10px;
+
+  margin-top: 20px;
+}
+
+.status-item {
+  background: #18364d;
+
+  padding: 15px;
+
+  border-radius: 15px;
+
+  text-align: center;
+}
+
+.status-item h5 {
+  font-size: 15px;
+
+  margin-bottom: 8px;
+
+  color: var(--text2);
+}
+
+.status-item span {
+  font-size: 18px;
+
+  font-weight: 700;
+
+  color: #00e5ff;
+}
+
+/* ============================================= */
+
+.badge {
+  padding: 8px 15px;
+
+  font-size: 14px;
+
+  border-radius: 30px;
+}
+
+/* ============================================= */
+
+#systemStatus {
+  background: #16364f;
+
+  border: none;
+
+  color: white;
+
+  padding: 15px;
+
+  border-radius: 15px;
+}
+
+/* ============================================= */
+
+.form-select {
+  background: #18364d;
+
+  color: white;
+
+  border: none;
+}
+
+.form-select option {
+  background: #102434;
+
+  color: white;
+}
+/* ============================================= */
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ============================================= */
+
+@keyframes sosPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 20px rgba(255, 0, 0, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+}
+
+/* ============================================= */
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+/* =========================================================
+   FLOATING SOS BUTTON
+========================================================= */
+
+.floating-sos {
+  position: fixed;
+
+  right: 25px;
+
+  bottom: 95px;
+
+  width: 70px;
+
+  height: 70px;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: linear-gradient(135deg, #ff3b3b, #d90429);
+
+  color: white;
+
+  font-size: 28px;
+
+  cursor: pointer;
+
+  z-index: 9999;
+
+  box-shadow: 0 12px 35px rgba(255, 0, 0, 0.4);
+
+  transition: 0.3s;
+
+  animation: sosPulse 2s infinite;
+}
+
+.floating-sos:hover {
+  transform: scale(1.12);
+}
+
+/* =========================================================
+   BOTTOM NAVIGATION
+========================================================= */
+
+.bottom-nav {
+  position: fixed;
+
+  bottom: 0;
+
+  left: 0;
+
+  width: 100%;
+
+  height: 75px;
+
+  background: #102434;
+
+  display: flex;
+
+  justify-content: space-around;
+
+  align-items: center;
+
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.35);
+
+  z-index: 999;
+}
+
+.nav-item {
+  background: none;
+
+  border: none;
+
+  color: #b8c5d3;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.nav-item i {
+  font-size: 22px;
+
+  margin-bottom: 5px;
+}
+
+.nav-item.active {
+  color: #00bcd4;
+}
+
+.nav-item:hover {
+  color: white;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer {
+  margin-top: 40px;
+
+  padding: 25px;
+
+  text-align: center;
+
+  background: #081722;
+
+  color: #b8c5d3;
+
+  font-size: 15px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   ASSISTANT MESSAGE
+========================================================= */
+
+.assistant-history {
+  margin: 30px;
+
+  padding: 25px;
+
+  border-radius: 25px;
+
+  background: #102434;
+
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+}
+
+.history-header {
+  margin-bottom: 20px;
+}
+
+.history-header h3 {
+  font-size: 26px;
+}
+
+.assistant-message {
+  background: #16364f;
+
+  padding: 20px;
+
+  border-radius: 15px;
+
+  font-size: 18px;
+
+  line-height: 1.7;
+}
+
+/* =========================================================
+   MAP
+========================================================= */
+
+#map {
+  width: 100%;
+
+  height: 100%;
+
+  min-height: 350px;
+
+  border-radius: 20px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 992px) {
+  .hero-top {
+    flex-direction: column;
+
+    gap: 25px;
+
+    text-align: center;
+  }
+
+  .hero-brand {
+    flex-direction: column;
+  }
+
+  .hero-mic {
+    width: 150px;
+
+    height: 150px;
+
+    font-size: 55px;
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .live-status {
+    grid-template-columns: 1fr;
+  }
+
+  .camera-box {
+    min-height: 350px;
+  }
+
+  #webcam {
+    height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    margin: 15px;
+
+    padding: 25px;
+  }
+
+  .hero-brand h1 {
+    font-size: 28px;
+  }
+
+  .hero-center h2 {
+    font-size: 30px;
+  }
+
+  .hero-center p {
+    font-size: 17px;
+  }
+
+  .hero-mic {
+    width: 130px;
+
+    height: 130px;
+
+    font-size: 48px;
+  }
+
+  .vision-card {
+    padding: 18px;
+  }
+
+  .assistant-panel {
+    padding: 18px;
+  }
+
+  .assistant-header h2 {
+    font-size: 24px;
+  }
+
+  .action-card {
+    min-height: 95px;
+
+    font-size: 15px;
+  }
+
+  .action-card i {
+    font-size: 25px;
+  }
+
+  .bottom-nav {
+    height: 70px;
+  }
+
+  .floating-sos {
+    width: 60px;
+
+    height: 60px;
+
+    bottom: 85px;
+
+    right: 18px;
+
+    font-size: 24px;
+  }
+
+  .footer {
+    padding-bottom: 100px;
+  }
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00bcd4;
+
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #081722;
+}
+
+/* ==========================================
+   RESPONSIVE LAYOUT FIX
+========================================== */
+
+.container-fluid {
+  width: 100%;
+  max-width: 1400px;
+  margin: auto;
+}
+
+.hero-header {
+  width: 100%;
+
+  padding: 35px;
+}
+
+.hero-top {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+}
+
+.hero-center {
+  text-align: center;
+
+  margin-top: 30px;
+}
+
+.hero-center h2 {
+  font-size: 42px;
+}
+
+.hero-center h3 {
+  font-size: 28px;
+}
+
+.hero-center h4 {
+  font-size: 22px;
+}
+
+.voice-button {
+  width: 120px;
+
+  height: 120px;
+
+  border-radius: 50%;
+}
+
+.vision-card {
+  width: 100%;
+}
+
+.assistant-panel {
+  width: 100%;
+}
+
+.camera-wrapper {
+  width: 100%;
+
+  aspect-ratio: 16/9;
+
+  min-height: 350px;
+
+  max-height: 650px;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+}
+
+#webcam {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.action-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 15px;
+}
+
+.action-button {
+  min-height: 70px;
+}
+
+.mini-status {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.assistant-box {
+  margin-top: 20px;
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 992px) {
+  .hero-header {
+    padding: 20px;
+  }
+
+  .hero-center h2 {
+    font-size: 30px;
+  }
+
+  .hero-center h3 {
+    font-size: 22px;
+  }
+
+  .hero-center h4 {
+    font-size: 18px;
+  }
+
+  .camera-wrapper {
+    height: 400px;
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-status {
+    flex-direction: column;
+  }
+}
+
+/* ==========================================
+   Describe Scene Button
+========================================== */
+
+#describeSceneBtn {
+  background: #18364d;
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  font-size: 17px;
+
+  line-height: 1.7;
+
+  color: #fff;
+
+  min-height: 100px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+}
+
+#describeSceneBtn:hover {
+  transform: translateY(-5px);
+
+  background: #00bcd4;
+}
+
+#describeSceneBtn:active {
+  transform: scale(0.98);
+}
+
+#describeSceneBtn i {
+  font-size: 32px;
+}
+
+/* ==========================================
+   FULLSCREEN RESPONSIVE FIX
+========================================== */
+
+.container-fluid {
+  max-width: 1600px;
+
+  width: 100%;
+
+  margin: auto;
+
+  padding-left: 20px;
+
+  padding-right: 20px;
+}
+
+.vision-card,
+.assistant-panel {
+  height: 100%;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+
+  height: auto;
+}
+
+#webcam,
+#canvas {
+  width: 100%;
+
+  height: 100%;
+}
+
+@media (min-width: 1400px) {
+  .vision-top h2 {
+    font-size: 34px;
+  }
+
+  .assistant-header h2 {
+    font-size: 34px;
+  }
+
+  .assistant-response {
+    font-size: 18px;
+  }
+
+  .action-card {
+    min-height: 130px;
+  }
+}
+
+@media (max-width: 992px) {
+  .camera-wrapper {
+    aspect-ratio: 4/3;
+  }
+}
+
+/* ==========================================
+   DESKTOP LAYOUT FIX
+========================================== */
+
+@media (min-width: 992px) {
+  .vision-card,
+  .assistant-panel {
+    min-height: 760px;
+  }
+
+  .assistant-panel {
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: flex-start;
+  }
+
+  .assistant-history {
+    width: 100%;
+
+    margin-top: 25px;
+  }
+}

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>AIVisualAssistant | First Time Setup</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static',
+          filename='css/onboarding.css') }}"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="background"></div>
+
+    <div class="wizard-container">
+      <!-- Progress -->
+
+      <div class="progress-area">
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <p id="stepText">Step 1 of 7</p>
+      </div>
+
+      <!-- Main Card -->
+
+      <div class="wizard-card">
+        <!-- ========================= -->
+
+        <!-- STEP 1 -->
+
+        <!-- ========================= -->
+
+        <section class="step active" id="step1">
+          <div class="logo">👁️</div>
+
+          <h1>Welcome to AIVisualAssistant</h1>
+
+          <p>
+            Your personal AI assistant for navigation, object detection, OCR, voice guidance and
+            emergency support.
+          </p>
+
+          <div class="voice-box">🔊 This setup is required only once.</div>
+
+          <button class="nextBtn">Start Setup</button>
+        </section>
+
+        <!-- ========================= -->
+
+        <!-- STEP 2 -->
+
+        <!-- ========================= -->
+
+        <section class="step" id="step2">
+          <h2>Choose Language</h2>
+
+          <p>Select your preferred language.</p>
+
+          <div class="language-grid">
+            <button class="langBtn" data-lang="en-IN">🇬🇧 English</button>
+
+            <button class="langBtn" data-lang="kn-IN">🇮🇳 ಕನ್ನಡ</button>
+
+            <button class="langBtn" data-lang="hi-IN">🇮🇳 हिन्दी</button>
+
+            <button class="langBtn" data-lang="ta-IN">🇮🇳 தமிழ்</button>
+
+            <button class="langBtn" data-lang="te-IN">🇮🇳 తెలుగు</button>
+
+            <button class="langBtn" data-lang="mr-IN">🇮🇳 मराठी</button>
+
+            <button class="langBtn" data-lang="bn-IN">🇮🇳 বাংলা</button>
+
+            <button class="langBtn" data-lang="gu-IN">🇮🇳 ગુજરાતી</button>
+          </div>
+
+          <div class="navigation">
+            <button class="backBtn">Back</button>
+
+            <button class="nextBtn">Continue</button>
+          </div>
+        </section>
+
+        <!-- ========================= -->
+
+        <!-- STEP 3 -->
+
+        <!-- ========================= -->
+
+        <section class="step" id="step3">
+          <h2>Permissions</h2>
+
+          <p>AIVisualAssistant needs these permissions.</p>
+
+          <div class="permission-card">
+            📷 Camera
+
+            <span> Required for Object Detection </span>
+          </div>
+
+          <div class="permission-card">
+            🎤 Microphone
+
+            <span> Required for Voice Commands </span>
+          </div>
+
+          <div class="permission-card">
+            📍 Location
+
+            <span> Required for Navigation </span>
+          </div>
+
+          <div class="permission-card">
+            🔔 Notifications
+
+            <span> Required for Alerts </span>
+          </div>
+
+          <button id="allowPermissions">Allow Permissions</button>
+
+          <div class="navigation">
+            <button class="backBtn">Back</button>
+
+            <button class="nextBtn">Continue</button>
+          </div>
+        </section>
+        <!-- ========================= -->
+        <!-- STEP 4 -->
+        <!-- ========================= -->
+
+        <section class="step" id="step4">
+          <h2>Emergency Contacts</h2>
+
+          <p>Add people who should be contacted in an emergency.</p>
+
+          <div class="form-group">
+            <label>Primary Contact</label>
+
+            <input type="text" id="contact1Name" placeholder="Name" />
+
+            <input type="tel" id="contact1Phone" placeholder="Phone Number" />
+          </div>
+
+          <div class="form-group">
+            <label>Secondary Contact</label>
+
+            <input type="text" id="contact2Name" placeholder="Name" />
+
+            <input type="tel" id="contact2Phone" placeholder="Phone Number" />
+          </div>
+
+          <div class="form-group">
+            <label>Third Contact (Optional)</label>
+
+            <input type="text" id="contact3Name" placeholder="Name" />
+
+            <input type="tel" id="contact3Phone" placeholder="Phone Number" />
+          </div>
+
+          <div class="navigation">
+            <button class="backBtn">Back</button>
+
+            <button class="nextBtn">Continue</button>
+          </div>
+        </section>
+
+        <!-- ========================= -->
+        <!-- STEP 5 -->
+        <!-- ========================= -->
+
+        <section class="step" id="step5">
+          <h2>Home Address</h2>
+
+          <p>Save your home address so you can simply say "Take me home."</p>
+
+          <input type="text" id="homeAddress" placeholder="Enter Home Address" />
+
+          <input type="text" id="city" placeholder="City" />
+
+          <input type="text" id="state" placeholder="State" />
+
+          <input type="text" id="country" placeholder="Country" />
+
+          <div class="navigation">
+            <button class="backBtn">Back</button>
+
+            <button class="nextBtn">Continue</button>
+          </div>
+        </section>
+
+        <!-- ========================= -->
+        <!-- STEP 6 -->
+        <!-- ========================= -->
+
+        <section class="step" id="step6">
+          <h2>Voice Test</h2>
+
+          <p>Press the microphone and say</p>
+
+          <div class="voice-test">"Hello Assistant"</div>
+
+          <button id="startVoiceTest">🎤 Start Voice Test</button>
+
+          <div id="voiceStatus">Waiting...</div>
+
+          <div class="navigation">
+            <button class="backBtn">Back</button>
+
+            <button class="nextBtn">Continue</button>
+          </div>
+        </section>
+
+        <!-- ========================= -->
+        <!-- STEP 7 -->
+        <!-- ========================= -->
+
+        <section class="step" id="step7">
+          <div class="finish-icon">✅</div>
+
+          <h2>Setup Completed</h2>
+
+          <p>AIVisualAssistant is now ready.</p>
+
+          <ul class="summary-list">
+            <li>✔ Language Saved</li>
+
+            <li>✔ Permissions Granted</li>
+
+            <li>✔ Emergency Contacts Saved</li>
+
+            <li>✔ Home Address Saved</li>
+
+            <li>✔ Voice Assistant Configured</li>
+          </ul>
+
+          <button id="finishSetup">Go To Dashboard</button>
+        </section>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static',
+filename='js/onboarding.js') }}"></script>
+  </body>
+</html>

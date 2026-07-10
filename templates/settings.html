@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Settings | AIVisualAssistant</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}" />
+  </head>
+
+  <body>
+    <div class="settings-container">
+      <!-- ========================= -->
+      <!-- Header -->
+      <!-- ========================= -->
+
+      <header class="settings-header">
+        <button class="back-btn" onclick="window.location.href = '/'">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+
+        <div>
+          <h1>Settings</h1>
+
+          <p>Customize your AI Assistant</p>
+        </div>
+      </header>
+
+      <!-- ========================= -->
+      <!-- Profile -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-user-circle"></i>
+
+          <h2>Profile</h2>
+        </div>
+
+        <div class="setting-item">
+          <label>Name</label>
+
+          <input type="text" id="userName" placeholder="Enter your name" />
+        </div>
+
+        <div class="setting-item">
+          <label>Your Phone Number</label>
+
+          <input
+            type="tel"
+            id="userPhone"
+            placeholder="+91 XXXXXXXXXX"
+          />
+          <small>Shown to your emergency contacts so they know who to call back.</small>
+        </div>
+
+        <div class="setting-item">
+          <label>Home Address</label>
+
+          <input type="text" id="homeAddress" placeholder="Enter your home address" />
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- Language -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-language"></i>
+
+          <h2>Language</h2>
+        </div>
+
+        <select id="language">
+          <option value="en">English</option>
+
+          <option value="hi">Hindi</option>
+        </select>
+      </section>
+
+      <!-- ========================= -->
+      <!-- Voice -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-microphone"></i>
+
+          <h2>Voice</h2>
+        </div>
+
+        <div class="setting-item">
+          <label>Voice Speed</label>
+
+          <input type="range" min="0.5" max="2" step="0.1" id="voiceSpeed" />
+        </div>
+
+        <div class="setting-item">
+          <label>Wake Word</label>
+
+          <input type="text" id="wakeWord" value="Hey BlindMate" />
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- Emergency Contacts -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-triangle-exclamation"></i>
+
+          <h2>Emergency Contacts</h2>
+        </div>
+
+        <p class="card-description">
+          These contacts will receive your location during an emergency.
+        </p>
+
+        <!-- Primary -->
+
+        <div class="setting-item">
+          <label>Primary Contact</label>
+
+          <input type="text" id="contact1Name" placeholder="Name" />
+
+          <input type="tel" id="contact1Phone" placeholder="+91 XXXXXXXXXX" />
+
+          <input type="email" id="contact1Email" placeholder="example@gmail.com" />
+        </div>
+
+        <!-- Secondary -->
+
+        <div class="setting-item">
+          <label>Secondary Contact</label>
+
+          <input type="text" id="contact2Name" placeholder="Name" />
+
+          <input type="tel" id="contact2Phone" placeholder="+91 XXXXXXXXXX" />
+
+          <input type="email" id="contact2Email" placeholder="example@gmail.com" />
+        </div>
+
+        <!-- Third -->
+
+        <div class="setting-item">
+          <label>Third Contact</label>
+
+          <input type="text" id="contact3Name" placeholder="Name" />
+
+          <input type="tel" id="contact3Phone" placeholder="+91 XXXXXXXXXX" />
+
+          <input type="email" id="contact3Email" placeholder="example@gmail.com" />
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- Accessibility -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-universal-access"></i>
+
+          <h2>Accessibility</h2>
+        </div>
+
+        <div class="toggle-item">
+          <span>Voice Feedback</span>
+
+          <label class="switch">
+            <input type="checkbox" id="voiceFeedback" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-item">
+          <span>Vibration Feedback</span>
+
+          <label class="switch">
+            <input type="checkbox" id="vibrationFeedback" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-item">
+          <span>High Contrast Mode</span>
+
+          <label class="switch">
+            <input type="checkbox" id="highContrast" />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-item">
+          <span>Large Text</span>
+
+          <label class="switch">
+            <input type="checkbox" id="largeText" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- Permissions -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-shield-halved"></i>
+
+          <h2>Permissions</h2>
+        </div>
+
+        <div class="permission-row">
+          <i class="fas fa-camera"></i>
+
+          <span>Camera</span>
+
+          <span class="permission-ok">Granted</span>
+        </div>
+
+        <div class="permission-row">
+          <i class="fas fa-location-dot"></i>
+
+          <span>Location</span>
+
+          <span class="permission-ok">Granted</span>
+        </div>
+
+        <div class="permission-row">
+          <i class="fas fa-microphone"></i>
+
+          <span>Microphone</span>
+
+          <span class="permission-ok">Granted</span>
+        </div>
+
+        <div class="permission-row">
+          <i class="fas fa-wifi"></i>
+
+          <span>Internet</span>
+
+          <span class="permission-ok">Connected</span>
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- AI Assistant -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="fas fa-brain"></i>
+
+          <h2>AI Assistant</h2>
+        </div>
+
+        <div class="toggle-item">
+          <span>Continuous Listening</span>
+
+          <label class="switch">
+            <input type="checkbox" id="continuousListening" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-item">
+          <span>Scene Description</span>
+
+          <label class="switch">
+            <input type="checkbox" id="sceneDescription" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-item">
+          <span>Object Detection</span>
+
+          <label class="switch">
+            <input type="checkbox" id="objectDetection" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-item">
+          <span>Memory Assistant</span>
+
+          <label class="switch">
+            <input type="checkbox" id="memoryAssistant" checked />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ========================= -->
+      <!-- Action Buttons -->
+      <!-- ========================= -->
+
+      <section class="settings-card">
+        <div class="d-grid gap-3">
+          <button id="saveSettings" class="btn btn-success btn-lg">
+            <i class="fas fa-save"></i>
+
+            Save Settings
+          </button>
+
+          <button id="resetSettings" class="btn btn-warning btn-lg">
+            <i class="fas fa-rotate-left"></i>
+
+            Reset Settings
+          </button>
+
+          <button id="logoutApp" class="btn btn-danger btn-lg">
+            <i class="fas fa-right-from-bracket"></i>
+
+            Exit
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bootstrap -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Settings JS -->
+
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+  </body>
+</html>
