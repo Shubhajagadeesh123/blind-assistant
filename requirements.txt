@@ -7,3 +7,4 @@ requests
 email-validator
 google-genai
 typing-extensions
+python-dotenv
