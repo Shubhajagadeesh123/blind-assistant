@@ -121,18 +121,31 @@ def translate():
     if language == "en-IN":
         return jsonify({"success": True, "translated": text})
 
-    language_map = {"en-IN": "English", "hi-IN": "Hindi"}
+    language_map = {
+        "en-IN": "English",
+        "hi-IN": "Hindi",
+        "kn-IN": "Kannada",
+        "ta-IN": "Tamil",
+        "te-IN": "Telugu",
+        "bn-IN": "Bengali",
+        "mr-IN": "Marathi",
+        "gu-IN": "Gujarati",
+    }
 
     target_language = language_map.get(language, "English")
 
     prompt = f"""
-Translate ONLY this sentence into {target_language}.
+Translate this entire sentence fully into {target_language}, including any object,
+place, or item names (e.g. "phone", "chair", "bottle") - {target_language} has its
+own words for these common nouns, so translate them too. Do not leave any English
+words in the output unless they are a proper noun with no natural {target_language}
+equivalent (e.g. a brand name).
 
 Rules:
-- Return only the translated sentence.
+- Return only the translated sentence, fully in {target_language} script.
 - Do not explain.
 - Do not add quotation marks.
-- Keep object names natural.
+- Do not mix English words into the translated sentence.
 - Preserve meaning exactly.
 
 Sentence:

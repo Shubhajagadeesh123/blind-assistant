@@ -42,6 +42,14 @@ class GeminiService:
                 "unknown_command": "मुझे वह कमांड समझ नहीं आई। कृपया फिर से कोशिश करें।",
                 "language_changed": "भाषा बदल दी गई है।",
             },
+            "kn-IN": {
+                "start_detection": "ಈಗ ವಸ್ತು ಪತ್ತೆಯನ್ನು ಪ್ರಾರಂಭಿಸುತ್ತಿದ್ದೇನೆ.",
+                "stop_detection": "ವಸ್ತು ಪತ್ತೆಯನ್ನು ನಿಲ್ಲಿಸುತ್ತಿದ್ದೇನೆ.",
+                "enable_location": "ಸ್ಥಳ ಸೇವೆಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸುತ್ತಿದ್ದೇನೆ.",
+                "navigation_ready": "ನ್ಯಾವಿಗೇಷನ್ ಸಿದ್ಧವಾಗಿದೆ.",
+                "unknown_command": "ಆ ಆಜ್ಞೆ ನನಗೆ ಅರ್ಥವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+                "language_changed": "ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗಿದೆ.",
+            },
             "ta-IN": {
                 "start_detection": "இப்போது பொருள் கண்டறிதலைத் தொடங்குகிறேன்.",
                 "stop_detection": "பொருள் கண்டறிதலை நிறுத்துகிறேன்.",
@@ -149,9 +157,38 @@ class GeminiService:
 
         tone_instruction = tone_instructions.get(tone, tone_instructions["friendly"])
 
+        language_names = {
+            "en-IN": "English",
+            "hi-IN": "Hindi",
+            "kn-IN": "Kannada",
+            "ta-IN": "Tamil",
+            "te-IN": "Telugu",
+            "bn-IN": "Bengali",
+            "mr-IN": "Marathi",
+            "gu-IN": "Gujarati",
+        }
+        language_name = language_names.get(language, "English")
+
+        language_instruction = (
+            f"Respond in {language_name} for the \"response\" field (the text that will be "
+            f"spoken aloud to the user) - write it ENTIRELY in {language_name} script. "
+            f"Translate object names, place descriptions, and common nouns fully into "
+            f"{language_name} too (e.g. \"phone\", \"chair\", \"person\" all have natural "
+            f"{language_name} words - use them, do not leave them in English). Only keep "
+            f"genuine proper nouns unchanged (a person's name, a brand name, a specific "
+            f"place name like \"Cubbon Park\"). Do not mix English words into an otherwise "
+            f"{language_name} sentence. This applies to every action, including "
+            f"answer_question and error/unknown responses - always answer entirely in "
+            f"{language_name}, matching the language the user is speaking in."
+            if language_name != "English"
+            else "Respond in English for the \"response\" field."
+        )
+
         base_prompt = f"""You are BlindMate, an AI assistant for visually impaired users. Process voice commands and return JSON responses.
 
 IMPORTANT: {tone_instruction}
+
+IMPORTANT: {language_instruction}
 
 Available actions:
 1. start_detection - Start object detection

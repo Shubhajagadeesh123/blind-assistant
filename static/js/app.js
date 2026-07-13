@@ -7,6 +7,15 @@ class BlindMate {
   constructor() {
     this.currentLanguage =
       localStorage.getItem("blindmate_language") || "en-IN";
+    // Apply saved language to on-screen text immediately, before waiting
+    // on the async server preferences fetch, to avoid a flash of English.
+    if (document.readyState !== "loading") {
+      this.applyUITranslations(this.currentLanguage);
+    } else {
+      document.addEventListener("DOMContentLoaded", () =>
+        this.applyUITranslations(this.currentLanguage),
+      );
+    }
     this.savedObjects = new Map();
 
     this.memoryCooldown = 60000;
@@ -1695,6 +1704,145 @@ class BlindMate {
     return emergencyPatterns.some((pattern) => pattern.test(lower));
   }
 
+  /**
+   * Static UI text translations - for on-screen labels/headings (button
+   * text, nav labels, etc). This is separate from spoken responses:
+   * speech goes through Gemini/translateMessage() for arbitrary text, but
+   * these are a small fixed set of strings so they're translated once
+   * here rather than round-tripping to the AI on every language change.
+   */
+  getUITranslations() {
+    return {
+      "en-IN": {
+        goodMorning: "Good Morning 👋",
+        readyToHelp: "Ready to help you.",
+        tapOrSay: "Tap or Say",
+        listeningForCommands: "Listening for your commands",
+        talkToAssistant: "Talk to Assistant",
+        detectObjects: "Detect Objects",
+        stopDetection: "Stop Detection",
+        enableGps: "Enable GPS",
+        navigation: "Navigation",
+        readText: "Read Text",
+        memory: "Memory",
+        describeScene: "Describe Scene",
+        emergencySos: "Emergency SOS",
+        home: "Home",
+        history: "History",
+        settings: "Settings",
+      },
+      "hi-IN": {
+        goodMorning: "सुप्रभात 👋",
+        readyToHelp: "आपकी मदद के लिए तैयार हूं।",
+        tapOrSay: "टैप करें या बोलें",
+        listeningForCommands: "आपके कमांड सुन रहा हूं",
+        talkToAssistant: "सहायक से बात करें",
+        detectObjects: "वस्तु पहचानें",
+        stopDetection: "पहचान बंद करें",
+        enableGps: "जीपीएस सक्षम करें",
+        navigation: "नेविगेशन",
+        readText: "पाठ पढ़ें",
+        memory: "स्मृति",
+        describeScene: "दृश्य बताएं",
+        emergencySos: "आपातकालीन एसओएस",
+        home: "होम",
+        history: "इतिहास",
+        settings: "सेटिंग्स",
+      },
+      "kn-IN": {
+        goodMorning: "ಶುಭೋದಯ 👋",
+        readyToHelp: "ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ಸಿದ್ಧ.",
+        tapOrSay: "ಟ್ಯಾಪ್ ಮಾಡಿ ಅಥವಾ ಹೇಳಿ",
+        listeningForCommands: "ನಿಮ್ಮ ಆಜ್ಞೆಗಳನ್ನು ಆಲಿಸುತ್ತಿದ್ದೇನೆ",
+        talkToAssistant: "ಸಹಾಯಕರೊಂದಿಗೆ ಮಾತನಾಡಿ",
+        detectObjects: "ವಸ್ತುಗಳನ್ನು ಪತ್ತೆ ಮಾಡಿ",
+        stopDetection: "ಪತ್ತೆಯನ್ನು ನಿಲ್ಲಿಸಿ",
+        enableGps: "ಜಿಪಿಎಸ್ ಸಕ್ರಿಯಗೊಳಿಸಿ",
+        navigation: "ನ್ಯಾವಿಗೇಷನ್",
+        readText: "ಪಠ್ಯ ಓದಿ",
+        memory: "ಸ್ಮರಣೆ",
+        describeScene: "ದೃಶ್ಯವನ್ನು ವಿವರಿಸಿ",
+        emergencySos: "ತುರ್ತು ಎಸ್‌ಒಎಸ್",
+        home: "ಮುಖಪುಟ",
+        history: "ಇತಿಹಾಸ",
+        settings: "ಸಂಯೋಜನೆಗಳು",
+      },
+      "ta-IN": {
+        goodMorning: "காலை வணக்கம் 👋",
+        readyToHelp: "உங்களுக்கு உதவ தயார்.",
+        tapOrSay: "தட்டவும் அல்லது சொல்லவும்",
+        listeningForCommands: "உங்கள் கட்டளைகளைக் கேட்கிறேன்",
+        talkToAssistant: "உதவியாளருடன் பேசுங்கள்",
+        detectObjects: "பொருட்களைக் கண்டறியவும்",
+        stopDetection: "கண்டறிதலை நிறுத்து",
+        enableGps: "ஜிபிஎஸ் இயக்கு",
+        navigation: "வழிசெலுத்தல்",
+        readText: "உரையைப் படிக்கவும்",
+        memory: "நினைவகம்",
+        describeScene: "காட்சியை விவரிக்கவும்",
+        emergencySos: "அவசர எஸ்ஓஎஸ்",
+        home: "முகப்பு",
+        history: "வரலாறு",
+        settings: "அமைப்புகள்",
+      },
+      "te-IN": {
+        goodMorning: "శుభోదయం 👋",
+        readyToHelp: "మీకు సహాయం చేయడానికి సిద్ధంగా ఉన్నాను.",
+        tapOrSay: "నొక్కండి లేదా చెప్పండి",
+        listeningForCommands: "మీ ఆదేశాలను వింటున్నాను",
+        talkToAssistant: "సహాయకుడితో మాట్లాడండి",
+        detectObjects: "వస్తువులను గుర్తించండి",
+        stopDetection: "గుర్తింపును ఆపండి",
+        enableGps: "జిపిఎస్‌ను ప్రారంభించండి",
+        navigation: "నావిగేషన్",
+        readText: "వచనం చదవండి",
+        memory: "జ్ఞాపకం",
+        describeScene: "దృశ్యాన్ని వివరించండి",
+        emergencySos: "అత్యవసర ఎస్ఓఎస్",
+        home: "హోమ్",
+        history: "చరిత్ర",
+        settings: "సెట్టింగ్‌లు",
+      },
+    };
+  }
+
+  /**
+   * Apply UI text translations to every element with a data-i18n
+   * attribute, for the given language. Falls back to English for any
+   * language not in the dictionary above (e.g. es-ES, fr-FR if ever
+   * added to the dropdown) since those only have voice/speech support
+   * via Gemini, not static UI translations yet.
+   */
+  applyUITranslations(langCode) {
+    const translations = this.getUITranslations();
+    const strings = translations[langCode] || translations["en-IN"];
+
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (strings[key]) {
+        el.textContent = strings[key];
+      }
+    });
+  }
+
+  /**
+   * Check whether the browser/OS actually has a text-to-speech voice
+   * available for the given language. Many browsers (especially desktop
+   * Chrome on Windows) only ship English voices by default - Kannada,
+   * Tamil, Telugu, etc. often aren't installed. If we speak translated
+   * text through a voice that doesn't support that script, it comes out
+   * as garbled nonsense rather than actual speech - so it's important to
+   * detect this rather than silently attempt it.
+   */
+  hasVoiceForLanguage(langCode) {
+    if (!this.synth) return false;
+    const voices = this.synth.getVoices();
+    const prefix = langCode.split("-")[0];
+    return voices.some(
+      (v) => v.lang === langCode || v.lang.startsWith(prefix),
+    );
+  }
+
   isNavigationCommand(command) {
     const navigationKeywords = [
       "take me to",
@@ -1854,21 +2002,6 @@ class BlindMate {
   /**
    * Load TensorFlow.js Coco SSD model
    */
-  async changeLanguage(language) {
-    this.currentLanguage = language;
-
-    localStorage.setItem("blindmate_language", language);
-
-    if (this.recognition) {
-      this.recognition.stop();
-
-      this.recognition.lang = language;
-
-      this.recognition.start();
-    }
-
-    await this.speak("Language changed successfully.");
-  }
   async loadModel() {
     try {
       this.updateStatus("Loading AI detection model...", "warning");
@@ -3649,7 +3782,7 @@ class BlindMate {
       return "";
     }
 
-    if (this.currentLanguage !== "hi-IN") {
+    if (this.currentLanguage === "en-IN") {
       return text;
     }
 
@@ -3664,7 +3797,7 @@ class BlindMate {
         body: JSON.stringify({
           text: text,
 
-          language: "hi-IN",
+          language: this.currentLanguage,
         }),
       });
 
@@ -4009,6 +4142,9 @@ class BlindMate {
       this.continuousRecognition.lang = langCode;
     }
 
+    // Update on-screen button/label text, not just speech
+    this.applyUITranslations(langCode);
+
     // Persist locally and update on server
     localStorage.setItem("blindmate_language", langCode);
     this.updateServerPreferences();
@@ -4065,6 +4201,7 @@ class BlindMate {
         if (this.elements.languageSelect) {
           this.elements.languageSelect.value = preferences.language;
         }
+        this.applyUITranslations(preferences.language);
       }
 
       if (preferences.tone) {
@@ -4085,6 +4222,7 @@ class BlindMate {
     const languageNames = {
       "en-IN": "English",
       "hi-IN": "Hindi",
+      "kn-IN": "Kannada",
       "ta-IN": "Tamil",
       "te-IN": "Telugu",
       "bn-IN": "Bengali",
@@ -4180,8 +4318,30 @@ class BlindMate {
        Translate Text
     ========================================== */
 
-    if (this.currentLanguage === "hi-IN") {
-      text = await this.translateMessage(text);
+    if (this.currentLanguage !== "en-IN") {
+      if (this.hasVoiceForLanguage(this.currentLanguage)) {
+        text = await this.translateMessage(text);
+      } else {
+        // No voice installed for this language on this device/browser -
+        // speaking translated text through the wrong voice would come out
+        // as garbled nonsense, so fall back to clear English instead of
+        // failing silently or mispronouncing.
+        console.warn(
+          `No ${this.currentLanguage} voice found on this device - speaking in English instead.`,
+        );
+        if (!this._warnedMissingVoiceFor) this._warnedMissingVoiceFor = {};
+        if (!this._warnedMissingVoiceFor[this.currentLanguage]) {
+          this._warnedMissingVoiceFor[this.currentLanguage] = true;
+          this.updateStatus(
+            `${this.getLanguageName(this.currentLanguage)} voice not found on this device - using English voice instead.`,
+            "warning",
+          );
+          // Prepend the notice to THIS SAME utterance (rather than firing
+          // a separate speak call) so it's actually heard, instead of
+          // being immediately cut off by the main text that follows it.
+          text = `${this.getLanguageName(this.currentLanguage)} voice is not installed on this device, continuing in English. ${text}`;
+        }
+      }
     }
     console.log("Final Text:", text);
     /* ==========================================
