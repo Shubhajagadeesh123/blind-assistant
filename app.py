@@ -47,6 +47,22 @@ def index():
         return "Application files not found", 404
 
 
+@app.route("/sw.js")
+def service_worker():
+    """
+    Serve the service worker from the root path (not /static/js/sw.js).
+    Service workers can only control pages within their own scope by
+    default - serving it from /static/js/ would limit it to that folder
+    only, breaking the whole "installable app" experience. Root scope is
+    required for Add to Home Screen / voice-assistant launching to work
+    properly across the whole app.
+    """
+    response = send_from_directory("static/js", "sw.js")
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Content-Type"] = "application/javascript"
+    return response
+
+
 # Static files are now served automatically by Flask from /static folder
 SETTINGS_FILE = "user_settings.json"
 

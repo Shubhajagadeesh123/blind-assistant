@@ -3,25 +3,37 @@
  * Provides offline capabilities and caching
  */
 
-const CACHE_NAME = "blindmate-v1";
+const CACHE_NAME = "blindmate-v2";
 const urlsToCache = [
   "/",
-  "/navigation.js",
-  "/styles.css",
+  "/static/js/app.js",
+  "/static/js/navigation.js",
+  "/static/js/memory.js",
+  "/static/js/sos.js",
+  "/static/css/styles.css",
   "https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
-  "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js",
-  "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js",
+  "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs",
+  "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd",
 ];
 
-// Install event - cache resources
+// Install event - cache resources. Uses individual cache.add() calls
+// wrapped so one failing resource (e.g. a CDN hiccup) doesn't cause the
+// whole installation to fail, unlike cache.addAll() which is all-or-nothing.
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log("Opened cache");
-      return cache.addAll(urlsToCache);
+      return Promise.allSettled(
+        urlsToCache.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn("Failed to cache (non-fatal):", url, err);
+          }),
+        ),
+      );
     }),
   );
+  self.skipWaiting();
 });
 
 // Fetch event - serve cached content when offline

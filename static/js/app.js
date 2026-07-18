@@ -18,6 +18,20 @@ class BlindMate {
     }
     this.savedObjects = new Map();
 
+    // Interaction history: what the user asked and how the assistant
+    // responded, persisted across sessions. Powers both the History tab
+    // and the "Assistant Response" panel (which previously never updated
+    // at all - it always showed the same hardcoded placeholder message
+    // regardless of actual usage).
+    try {
+      this.interactionHistory = JSON.parse(
+        localStorage.getItem("blindmate_history") || "[]",
+      );
+    } catch (e) {
+      this.interactionHistory = [];
+    }
+    this.lastCommandText = null;
+
     this.memoryCooldown = 60000;
 
     this.lastObstacleAlert = 0;
@@ -1646,6 +1660,16 @@ class BlindMate {
     }
 
     if (
+      lower.includes("my history") ||
+      lower.includes("read history") ||
+      lower.includes("show history") ||
+      lower.includes("what did i say")
+    ) {
+      this.showHistory();
+      return;
+    }
+
+    if (
       lower.includes("start detection") ||
       lower.includes("start object detection")
     ) {
@@ -1969,9 +1993,98 @@ class BlindMate {
   }
 
   /**
+   * Record an interaction (command + response) into persistent history.
+   * Also updates the "Assistant Response" panel on screen, which
+   * previously never changed from its hardcoded placeholder text.
+   */
+  logInteraction(command, response) {
+    if (!response) return;
+
+    const entry = {
+      command: command || null,
+      response: response,
+      time: new Date().toLocaleString(),
+      timestamp: Date.now(),
+    };
+
+    this.interactionHistory.push(entry);
+    // Cap history length so localStorage doesn't grow unbounded
+    if (this.interactionHistory.length > 50) {
+      this.interactionHistory = this.interactionHistory.slice(-50);
+    }
+
+    try {
+      localStorage.setItem(
+        "blindmate_history",
+        JSON.stringify(this.interactionHistory),
+      );
+    } catch (e) {
+      console.warn("Could not persist history:", e);
+    }
+
+    // Update the on-screen "Assistant Response" panel with the latest
+    // interaction, instead of it staying frozen on the placeholder text.
+    const panel = document.getElementById("assistantMessage");
+    if (panel) {
+      panel.innerHTML = command
+        ? `<b>You said:</b> ${this.escapeHtml(command)}<br><b>Response:</b> ${this.escapeHtml(response)}`
+        : this.escapeHtml(response);
+    }
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Show interaction history - both visually (for a sighted helper/family
+   * member glancing at the screen) and spoken (for the blind user, since
+   * a visual list alone isn't accessible to them).
+   */
+  showHistory() {
+    if (this.interactionHistory.length === 0) {
+      this.speak("You don't have any history yet.", true);
+      return;
+    }
+
+    const recent = this.interactionHistory.slice(-5).reverse();
+
+    // Visual list, most recent first
+    const panel = document.getElementById("assistantMessage");
+    if (panel) {
+      panel.innerHTML =
+        "<b>Recent History:</b><br>" +
+        recent
+          .map(
+            (entry) =>
+              `<div style="margin-top:8px;"><small>${entry.time}</small><br>` +
+              (entry.command
+                ? `<b>You said:</b> ${this.escapeHtml(entry.command)}<br>`
+                : "") +
+              `<b>Response:</b> ${this.escapeHtml(entry.response)}</div>`,
+          )
+          .join("");
+    }
+
+    // Spoken summary of the most recent interaction, since the blind user
+    // can't read the visual list above.
+    const latest = recent[0];
+    let spoken = `You have ${this.interactionHistory.length} recent interactions. `;
+    spoken += latest.command
+      ? `Most recently, you said "${latest.command}", and I replied "${latest.response}".`
+      : `Most recently, I said "${latest.response}".`;
+
+    this.speak(spoken, true);
+  }
+
+  /**
    * Show the recognized command in UI
    */
   showRecognizedCommand(command) {
+    this.lastCommandText = command;
+
     // Update the system status to show the command
     this.updateStatus(`Command received: "${command}"`, "info");
 
@@ -2025,8 +2138,21 @@ class BlindMate {
         throw new Error("COCO-SSD model not loaded");
       }
 
-      // Load COCO-SSD model
-      this.model = await cocoSsd.load();
+      // Load COCO-SSD model. The default base model (lite_mobilenet_v2) is
+      // optimized for speed over accuracy, which noticeably hurts
+      // detection quality - especially for smaller or partially visible
+      // objects. mobilenet_v2 is meaningfully more accurate while still
+      // running in real time on typical phones. Falls back to the lighter
+      // model if the device can't handle the larger one (e.g. low memory).
+      try {
+        this.model = await cocoSsd.load({ base: "mobilenet_v2" });
+      } catch (modelError) {
+        console.warn(
+          "mobilenet_v2 failed to load, falling back to lite_mobilenet_v2:",
+          modelError,
+        );
+        this.model = await cocoSsd.load({ base: "lite_mobilenet_v2" });
+      }
 
       this.updateStatus("AI model loaded successfully!", "success");
 
@@ -2181,11 +2307,14 @@ class BlindMate {
 
       this.updateStatus("Starting camera...", "warning");
 
-      // Request camera access
+      // Request camera access. Higher resolution gives the detection
+      // model meaningfully more detail to work with - important for
+      // smaller or farther-away objects, which is one of the biggest
+      // drivers of missed/incorrect detections at low resolution.
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
           facingMode: "environment", // Use back camera on mobile
         },
       });
@@ -3074,73 +3203,6 @@ class BlindMate {
         break;
       }
     }
-  }
-  async describeScene() {
-    if (!this.video || !this.video.srcObject) {
-      this.speak("Please start detection first.", true);
-
-      return;
-    }
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = this.video.videoWidth;
-
-    canvas.height = this.video.videoHeight;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.drawImage(this.video, 0, 0);
-
-    canvas.toBlob(async (blob) => {
-      const formData = new FormData();
-
-      formData.append("image", blob, "scene.jpg");
-
-      formData.append(
-        "objects",
-
-        JSON.stringify(this.currentPredictions),
-      );
-
-      try {
-        const response = await fetch(
-          "/api/scene/describe",
-
-          {
-            method: "POST",
-
-            body: formData,
-          },
-        );
-
-        const result = await response.json();
-
-        if (result.success) {
-          this.currentSceneDescription = result.description;
-
-          this.speak(
-            result.description,
-
-            true,
-          );
-        } else {
-          this.speak(
-            "Unable to describe the scene.",
-
-            true,
-          );
-        }
-      } catch (error) {
-        console.error(error);
-
-        this.speak(
-          "Scene description failed.",
-
-          true,
-        );
-      }
-    }, "image/jpeg");
   }
   /* ==========================================
        Ask Gemini About Current Scene
@@ -4344,6 +4406,15 @@ class BlindMate {
       }
     }
     console.log("Final Text:", text);
+
+    // Log to interaction history - skip continuous object-detection
+    // announcements ("person ahead of you", etc), since those would
+    // flood the history with noise rather than meaningful interactions.
+    if (!isObjectAnnouncement) {
+      this.logInteraction(this.lastCommandText, text);
+      this.lastCommandText = null;
+    }
+
     /* ==========================================
        Navigation Speech
     ========================================== */
@@ -4630,5 +4701,14 @@ const settingsBtn =
 if (settingsBtn) {
   settingsBtn.addEventListener("click", () => {
     window.location.href = "/settings";
+  });
+}
+
+const historyBtn = document.getElementById("historyTab");
+if (historyBtn) {
+  historyBtn.addEventListener("click", () => {
+    if (window.blindMate) {
+      window.blindMate.showHistory();
+    }
   });
 }

@@ -516,15 +516,14 @@ Respond only with valid JSON, no extra text."""
 
         return None  # No tone detected
 
+    def answer_scene_question(self, question, scene, objects, language="en-IN"):
 
-def answer_scene_question(self, question, scene, objects, language="en-IN"):
+        if not self.client:
+            return "Gemini is unavailable."
 
-    if not self.client:
-        return "Gemini is unavailable."
+        try:
 
-    try:
-
-        prompt = f"""
+            prompt = f"""
 You are BlindMate, an AI assistant for visually impaired users.
 
 Current Scene:
@@ -544,25 +543,24 @@ Rules:
 - Speak naturally like a human assistant.
 """
 
-        response = self.client.models.generate_content(
-            model="gemini-2.5-flash", contents=prompt
-        )
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
 
-        return response.text.strip()
+            return response.text.strip()
 
-    except Exception as e:
+        except Exception as e:
 
-        logging.error(e)
+            logging.error(e)
 
-        return "Sorry, I couldn't answer your question."
+            return "Sorry, I couldn't answer your question."
 
+    def describe_scene(self, objects):
 
-def describe_scene(self, objects):
+        if not self.client:
+            return "Gemini is unavailable."
 
-    if not self.client:
-        return "Gemini is unavailable."
-
-    prompt = f"""
+        prompt = f"""
 You are BlindMate.
 
 Detected objects:
@@ -583,25 +581,24 @@ Rules:
 - End with a short safety suggestion if necessary.
 """
 
-    try:
+        try:
 
-        response = self.client.models.generate_content(
-            model="gemini-2.5-flash", contents=prompt
-        )
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash", contents=prompt
+            )
 
-        return response.text.strip()
+            return response.text.strip()
 
-    except Exception as e:
+        except Exception as e:
 
-        logging.error(e)
+            logging.error(e)
 
-        return "Unable to describe the scene."
+            return "Unable to describe the scene."
 
+    def _get_translation(self, key: str, language: str) -> str:
+        """Get translated text for the given key and language"""
+        if language in self.translations and key in self.translations[language]:
+            return self.translations[language][key]
 
-def _get_translation(self, key: str, language: str) -> str:
-    """Get translated text for the given key and language"""
-    if language in self.translations and key in self.translations[language]:
-        return self.translations[language][key]
-
-    # Fallback to English
-    return self.translations["en-IN"].get(key, "Command processed.")
+        # Fallback to English
+        return self.translations["en-IN"].get(key, "Command processed.")

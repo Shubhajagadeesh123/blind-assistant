@@ -28,7 +28,10 @@
     <script src="{{ url_for('static', filename='js/sos.js') }}"></script>
 
     <script src="{{ url_for('static', filename='js/memory.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/voiceAssistant.js') }}"></script>
+
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}" />
+    <meta name="theme-color" content="#0d1117" />
   </head>
 
   <body>
@@ -450,6 +453,21 @@
 
         if (btn) btn.click();
       });
+
+      // Register the service worker - this, combined with manifest.json,
+      // is what allows "Add to Home Screen" to create a real installable
+      // app icon (standalone window, no browser address bar) instead of
+      // a generic bookmark, and is required for the phone's voice
+      // assistant (Google Assistant / Siri) to be able to open the app
+      // by name.
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((reg) => console.log("Service worker registered:", reg.scope))
+            .catch((err) => console.warn("Service worker registration failed:", err));
+        });
+      }
     </script>
   </body>
 </html>
