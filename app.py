@@ -6,7 +6,7 @@ import json
 import smtplib
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
-
+from flask import send_from_directory
 # Load variables from .env into the real process environment. Without
 # this, every os.environ.get(...) call below (Gemini key, SMTP
 # credentials, Maps key, etc.) silently returns None even if they're set
@@ -1154,6 +1154,10 @@ Keep answers short.
 
     return jsonify({"success": True, "answer": answer})
 
+
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory("static", "manifest.json")
 
 @app.route("/api/scene/describe", methods=["POST"])
 def describe_scene():
