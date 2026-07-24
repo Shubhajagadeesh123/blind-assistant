@@ -21,7 +21,7 @@ class MemoryAssistant {
     const memoryTab = document.getElementById("memoryTab");
 
     // These buttons exist for sighted/discoverability purposes, but they
-    // trigger the same voice-based flow as saying "Hey BlindMate, where is
+    // trigger the same voice-based flow as saying "Hey Netra, where is
     // my phone" - not a typed prompt.
     if (memoryBtn) {
       memoryBtn.addEventListener("click", () => {
@@ -76,7 +76,7 @@ class MemoryAssistant {
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       this.speak(
-        "Voice recognition is not available on this browser. Please say the full command, for example: Hey BlindMate, where is my phone.",
+        "Voice recognition is not available on this browser. Please say the full command, for example: Hey Netra, where is my phone.",
       );
       return;
     }

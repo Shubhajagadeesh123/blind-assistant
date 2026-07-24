@@ -324,16 +324,6 @@ def navigation():
         return "Navigation page not found", 404
 
 
-@app.route("/simple-navigation")
-def simple_navigation():
-    """Serve simple navigation page"""
-    try:
-        return render_template("simple_navigation.html")
-    except Exception as e:
-        logging.error(f"Error serving simple_navigation.html: {e}")
-        return "Simple navigation page not found", 404
-
-
 # JavaScript files are now served automatically by Flask from /static folder
 
 
@@ -640,7 +630,7 @@ def emergency():
     callback = f" You can call them back at {user_phone}." if user_phone else ""
 
     message = (
-        f"This is an automated message from BlindMate. "
+        f"This is an automated message from Netra. "
         f"{who}, who has you listed as an emergency contact, needs help and cannot call you directly. "
         f"Their current location: {maps_link}.{callback} Please call them as soon as you can."
     )
@@ -1131,7 +1121,7 @@ def gemini_chat():
     prompt = f"""
 {language_instruction}
 
-You are BlindMate,
+You are Netra,
 an AI assistant for visually impaired people.
 
 Question:
@@ -1155,10 +1145,6 @@ Keep answers short.
     return jsonify({"success": True, "answer": answer})
 
 
-@app.route("/manifest.json")
-def manifest():
-    return send_from_directory("static", "manifest.json")
-
 @app.route("/api/scene/describe", methods=["POST"])
 def describe_scene():
 
@@ -1172,7 +1158,7 @@ def describe_scene():
     image_bytes = image.read()
 
     prompt = f"""
-You are BlindMate, an AI assistant for visually impaired users.
+You are Netra, an AI assistant for visually impaired users.
 
 Detected objects:
 {objects}

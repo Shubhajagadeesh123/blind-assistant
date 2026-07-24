@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-BlindMate Local Setup Script
-This script helps you set up the BlindMate application for local development.
+Netra Local Setup Script
+This script helps you set up the Netra application for local development.
 """
 
 import os
@@ -69,11 +69,11 @@ def create_env_template():
     """Create a template .env file"""
     print("\n=== Creating Environment Template ===")
 
-    env_template = """# BlindMate Environment Variables
+    env_template = """# Netra Environment Variables
 # Copy this file to .env and fill in your actual values
 
 # Database URL (use SQLite for local development or your PostgreSQL URL)
-DATABASE_URL=sqlite:///blindmate.db
+DATABASE_URL=sqlite:///netra.db
 
 # Google Gemini API Key (get from Google AI Studio)
 GEMINI_API_KEY=your_gemini_api_key_here
@@ -98,7 +98,7 @@ GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
 def main():
     """Main setup function"""
-    print("BlindMate Local Development Setup")
+    print("Netra Local Development Setup")
     print("=" * 40)
 
     # Check Python version

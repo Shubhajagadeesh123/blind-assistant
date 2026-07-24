@@ -322,7 +322,7 @@ function finishSetup() {
   speak("Setup completed successfully.");
 
   setTimeout(() => {
-    // Go to existing BlindMate Dashboard
+    // Go to existing Netra Dashboard
     window.location.href = "/";
   }, 2000);
 }

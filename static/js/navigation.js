@@ -1,5 +1,5 @@
 /**
- * BlindMate Enhanced Navigation System
+ * Netra Enhanced Navigation System
  * High-accuracy GPS tracking with optimized battery usage and human-friendly speech instructions
  * Features: Smart tracking frequency, robust error handling, clear voice navigation
  */
@@ -131,7 +131,7 @@ class UniversalNavigation {
    * Initialize the navigation system
    */
   async initialize() {
-    console.log("Initializing BlindMate Navigation System...");
+    console.log("Initializing Netra Navigation System...");
 
     this.setupSpeechRecognition();
     this.setupUIEventListeners();
@@ -148,7 +148,7 @@ class UniversalNavigation {
     // Get Google Maps API key
     await this.getGoogleMapsApiKey();
 
-    console.log("BlindMate Navigation System initialized");
+    console.log("Netra Navigation System initialized");
 
     // Setup mobile-specific optimizations
     if (this.isMobile) {
@@ -2291,7 +2291,7 @@ class UniversalNavigation {
 
 // Initialize navigation system when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Initializing BlindMate Navigation System...");
+  console.log("Initializing Netra Navigation System...");
   window.blindMateNavigation = new UniversalNavigation();
 });
 

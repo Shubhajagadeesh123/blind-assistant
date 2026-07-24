@@ -1,9 +1,9 @@
 /**
- * BlindMate - AI Assistant for Visually Impaired Users
+ * Netra - AI Assistant for Visually Impaired Users
  * Main Application JavaScript
  */
 
-class BlindMate {
+class Netra {
   constructor() {
     this.currentLanguage =
       localStorage.getItem("blindmate_language") || "en-IN";
@@ -142,7 +142,7 @@ class BlindMate {
 
     // Wake word detection
     this.isListeningForWakeWord = true;
-    this.wakeWords = ["hey blindmate", "hey blind mate", "blindmate"];
+    this.wakeWords = ["hey netra", "netra"];
     this.continuousRecognition = null;
 
     // Volume key detection
@@ -412,7 +412,7 @@ class BlindMate {
   async init() {
     this.loadSettings();
     try {
-      this.updateStatus("Initializing BlindMate...", "info");
+      this.updateStatus("Initializing Netra...", "info");
 
       // Load user preferences and check if this is a first-time user
       await this.loadServerPreferences();
@@ -1090,7 +1090,7 @@ class BlindMate {
       // Only show completion message if we're not in an error state
       if (!this.updateStatus.lastWasError) {
         this.updateStatus(
-          'Ready for voice commands. Say "Hey BlindMate", or long-press anywhere to toggle detection.',
+          'Ready for voice commands. Say "Hey Netra", or long-press anywhere to toggle detection.',
           "success",
         );
       }
@@ -1322,7 +1322,7 @@ class BlindMate {
    * Handle wake word detection
    */
   handleWakeWordDetected(commandAfterWake = null) {
-    console.log('Wake word "Hey BlindMate" detected!');
+    console.log('Wake word "Hey Netra" detected!');
     this.updateStatus(
       "🎤 Wake word detected! Listening for command...",
       "success",
@@ -1404,7 +1404,7 @@ class BlindMate {
         );
         this.stopVoiceCommand();
         this.updateStatus(
-          'Ready for voice commands. Say "Hey BlindMate", or long-press anywhere to toggle detection.',
+          'Ready for voice commands. Say "Hey Netra", or long-press anywhere to toggle detection.',
           "info",
         );
       }
@@ -2189,14 +2189,14 @@ class BlindMate {
    */
   startVoiceInteraction() {
     const greeting =
-      'Hello! I am BlindMate. Object detection is starting now. Say "Hey BlindMate" anytime for voice commands, or long-press anywhere on the screen to stop or start detection.';
+      'Hello! I am Netra. Object detection is starting now. Say "Hey Netra" anytime for voice commands, or long-press anywhere on the screen to stop or start detection.';
     this.speak(greeting, true); // High priority
 
     // Start continuous listening for the wake word immediately - no
     // waiting for the greeting to finish first.
     this.startContinuousListening();
     this.updateStatus(
-      '👂 Always listening for "Hey BlindMate" or Volume Up key',
+      '👂 Always listening for "Hey Netra" or Volume Up key',
       "info",
     );
   }
@@ -2288,7 +2288,7 @@ class BlindMate {
   finalizeSetup() {
     setTimeout(() => {
       this.speak(
-        'Setup complete. Say "Hey BlindMate" followed by your command to interact with me.',
+        'Setup complete. Say "Hey Netra" followed by your command to interact with me.',
         true,
       );
       this.startContinuousListening();
@@ -2411,8 +2411,25 @@ class BlindMate {
     }
 
     try {
-      // Perform detection
-      const predictions = await this.model.detect(this.video);
+      // Perform detection on the full frame
+      let predictions = await this.model.detect(this.video, 25, 0.5);
+
+      // Every 3rd frame, ALSO run a zoomed center-crop detection pass.
+      // COCO-SSD internally resizes every input down to a small fixed
+      // resolution before running inference, so simply increasing camera
+      // resolution doesn't fully help small/distant objects - they still
+      // get shrunk to the same tiny footprint internally. Cropping into
+      // the center of the frame and scaling that crop back up makes small
+      // objects occupy proportionally more of the model's fixed input
+      // size, meaningfully improving detection of things that are small
+      // or far away. Only running this every 3rd frame (not every frame)
+      // keeps the extra inference cost reasonable.
+      this.detectionFrameCount = (this.detectionFrameCount || 0) + 1;
+      if (this.detectionFrameCount % 3 === 0) {
+        const zoomedPredictions = await this.detectZoomedCenter();
+        predictions = this.mergeDetections(predictions, zoomedPredictions);
+      }
+
       this.currentPredictions = predictions;
       // Clear previous drawings
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -2444,6 +2461,106 @@ class BlindMate {
         setTimeout(() => this.detectObjects(), 100);
       }
     }
+  }
+
+  /**
+   * Run detection on a zoomed crop of the center of the frame, then remap
+   * the resulting bounding boxes back into full-frame coordinates so they
+   * line up correctly with everything downstream (position/distance
+   * announcements, drawing, tracking).
+   */
+  async detectZoomedCenter() {
+    try {
+      const video = this.video;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      if (!vw || !vh) return [];
+
+      // Crop the center 55% of the frame and scale it up to fill the
+      // full frame size before detecting - this is what makes small/
+      // distant objects appear proportionally larger to the model.
+      const cropRatio = 0.55;
+      const cropW = vw * cropRatio;
+      const cropH = vh * cropRatio;
+      const cropX = (vw - cropW) / 2;
+      const cropY = (vh - cropH) / 2;
+
+      if (!this.zoomCanvas) {
+        this.zoomCanvas = document.createElement("canvas");
+      }
+      this.zoomCanvas.width = vw;
+      this.zoomCanvas.height = vh;
+      const zctx = this.zoomCanvas.getContext("2d");
+      zctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, vw, vh);
+
+      const zoomedPredictions = await this.model.detect(
+        this.zoomCanvas,
+        20,
+        0.5,
+      );
+
+      // Remap bbox coordinates from the zoomed-canvas space back into
+      // original full-frame coordinates
+      const scaleX = cropW / vw;
+      const scaleY = cropH / vh;
+
+      return zoomedPredictions.map((p) => {
+        const [zx, zy, zw, zh] = p.bbox;
+        return {
+          ...p,
+          bbox: [
+            cropX + zx * scaleX,
+            cropY + zy * scaleY,
+            zw * scaleX,
+            zh * scaleY,
+          ],
+        };
+      });
+    } catch (error) {
+      console.error("Zoomed detection error:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Merge full-frame and zoomed-pass detections, skipping duplicates (the
+   * same real-world object often gets detected in both passes) using IoU
+   * (intersection-over-union) overlap on matching classes.
+   */
+  mergeDetections(mainPredictions, zoomedPredictions) {
+    const merged = [...mainPredictions];
+
+    for (const zPred of zoomedPredictions) {
+      const isDuplicate = mainPredictions.some(
+        (mPred) =>
+          mPred.class === zPred.class &&
+          this.calculateIoU(mPred.bbox, zPred.bbox) > 0.3,
+      );
+      if (!isDuplicate) {
+        merged.push(zPred);
+      }
+    }
+
+    return merged;
+  }
+
+  /**
+   * Intersection-over-union of two [x, y, width, height] bounding boxes,
+   * used to detect when two detections are really the same object.
+   */
+  calculateIoU(boxA, boxB) {
+    const [ax, ay, aw, ah] = boxA;
+    const [bx, by, bw, bh] = boxB;
+
+    const x1 = Math.max(ax, bx);
+    const y1 = Math.max(ay, by);
+    const x2 = Math.min(ax + aw, bx + bw);
+    const y2 = Math.min(ay + ah, by + bh);
+
+    const interArea = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+    const unionArea = aw * ah + bw * bh - interArea;
+
+    return unionArea > 0 ? interArea / unionArea : 0;
   }
 
   /**
@@ -2796,7 +2913,7 @@ class BlindMate {
   /**
    * After the AI answers a voice command, automatically reopen the
    * microphone for a follow-up question - the user doesn't need to repeat
-   * "Hey BlindMate" for every single question in a row. If nothing is said,
+   * "Hey Netra" for every single question in a row. If nothing is said,
    * it falls back to wake-word-only listening automatically (no change
    * needed there - the existing commandRecognition.onend handler already
    * does that).
@@ -2840,7 +2957,7 @@ class BlindMate {
     if (isEmptyCommand) {
       console.log("Filtering out meaningless command:", command);
       this.updateStatus(
-        'Ready for voice commands. Say "Hey BlindMate", or long-press anywhere to toggle detection.',
+        'Ready for voice commands. Say "Hey Netra", or long-press anywhere to toggle detection.',
         "info",
       );
       return;
@@ -2982,7 +3099,7 @@ class BlindMate {
       cmd.includes("learn")
     ) {
       this.speak(
-        "Starting BlindMate tutorial. This will help you learn all the features.",
+        "Starting Netra tutorial. This will help you learn all the features.",
         true,
       );
       setTimeout(() => {
@@ -3344,7 +3461,7 @@ class BlindMate {
       case "silent":
         // Do nothing for meaningless commands - prevents false error messages
         this.updateStatus(
-          'Ready for voice commands. Say "Hey BlindMate", or long-press anywhere to toggle detection.',
+          'Ready for voice commands. Say "Hey Netra", or long-press anywhere to toggle detection.',
           "info",
         );
         return;
@@ -4636,7 +4753,7 @@ class BlindMate {
       // Wait a moment for the interface to load, then offer tutorial
       setTimeout(() => {
         this.speak(
-          'Welcome to BlindMate! This is your first time using the app. Would you like to start with a guided tutorial to learn all the features? You can also access the tutorial anytime by saying "start tutorial" or clicking the tutorial button.',
+          'Welcome to Netra! This is your first time using the app. Would you like to start with a guided tutorial to learn all the features? You can also access the tutorial anytime by saying "start tutorial" or clicking the tutorial button.',
         );
 
         // Show tutorial button prominently
@@ -4677,7 +4794,7 @@ class BlindMate {
 
 // Initialize the application when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-  window.blindMate = new BlindMate();
+  window.blindMate = new Netra();
 });
 
 // Handle page visibility changes to pause/resume detection

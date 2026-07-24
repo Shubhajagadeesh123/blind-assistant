@@ -41,7 +41,7 @@ const defaultSettings = {
 
   voiceSpeed: 1,
 
-  wakeWord: "Hey BlindMate",
+  wakeWord: "Hey Netra",
 
   contact1Name: "",
 
@@ -163,7 +163,7 @@ async function loadSettings() {
     setValue("language", settings.language || "en");
     setValue("voiceSpeed", settings.voiceSpeed || 1);
 
-    setValue("wakeWord", settings.wakeWord || "Hey BlindMate");
+    setValue("wakeWord", settings.wakeWord || "Hey Netra");
 
     setValue("contact1Name", settings.contact1Name || "");
     setValue("contact1Phone", settings.contact1Phone || "");

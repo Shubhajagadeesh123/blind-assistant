@@ -1,5 +1,5 @@
 /**
- * Service Worker for BlindMate PWA
+ * Service Worker for Netra PWA
  * Provides offline capabilities and caching
  */
 

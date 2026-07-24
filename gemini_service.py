@@ -184,7 +184,7 @@ class GeminiService:
             else "Respond in English for the \"response\" field."
         )
 
-        base_prompt = f"""You are BlindMate, an AI assistant for visually impaired users. Process voice commands and return JSON responses.
+        base_prompt = f"""You are Netra, an AI assistant for visually impaired users. Process voice commands and return JSON responses.
 
 IMPORTANT: {tone_instruction}
 
@@ -524,7 +524,7 @@ Respond only with valid JSON, no extra text."""
         try:
 
             prompt = f"""
-You are BlindMate, an AI assistant for visually impaired users.
+You are Netra, an AI assistant for visually impaired users.
 
 Current Scene:
 {scene}
@@ -561,7 +561,7 @@ Rules:
             return "Gemini is unavailable."
 
         prompt = f"""
-You are BlindMate.
+You are Netra.
 
 Detected objects:
 
