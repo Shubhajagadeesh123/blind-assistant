@@ -105,8 +105,18 @@
         "position": "ahead of you",
         "distance": "very close",
         "scene": "I can see person ahead of you, very close. Please move carefully.",
-        "time": "7/27/2026, 6:49:27 AM",
-        "timestamp": 1785115167636,
+        "time": "7/27/2026, 6:38:04 PM",
+        "timestamp": 1785157684620,
+        "language": "en-IN"
+    },
+    {
+        "object": "wine glass",
+        "location": "ahead of you, far away",
+        "position": "ahead of you",
+        "distance": "far away",
+        "scene": "I can see person ahead of you, very close. Nearby objects include wine glass ahead of you, far away. Please move carefully.",
+        "time": "7/27/2026, 6:38:20 PM",
+        "timestamp": 1785157700214,
         "language": "en-IN"
     }
 ]
