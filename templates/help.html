@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Netra - Shortcuts &amp; Instructions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css', v='3') }}" />
+    <style>
+      .help-page {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 24px 20px 100px;
+        color: #e6edf3;
+      }
+      .help-page h1 {
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+      }
+      .help-page p.subtitle {
+        opacity: 0.75;
+        margin-top: 0;
+        margin-bottom: 24px;
+      }
+      .help-section {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+      }
+      .help-section h2 {
+        font-size: 1.1rem;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #38bdf8;
+      }
+      .help-section ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .help-section li {
+        margin-bottom: 10px;
+        line-height: 1.5;
+      }
+      .help-section li b {
+        color: #fff;
+      }
+      .help-controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        gap: 10px;
+        padding: 12px 16px;
+        background: #0d1117;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .help-controls button,
+      .help-controls a {
+        flex: 1;
+        padding: 14px;
+        border-radius: 10px;
+        border: none;
+        font-size: 1rem;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn-repeat {
+        background: #1f6feb;
+        color: #fff;
+      }
+      .btn-stop {
+        background: #444c56;
+        color: #fff;
+      }
+      .btn-back {
+        background: #238636;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="help-page">
+      <h1>Shortcuts &amp; Instructions</h1>
+      <p class="subtitle">
+        This page is being read aloud automatically. You do not need to look
+        at the screen - just listen. Tap anywhere to pause or resume
+        listening controls at the bottom.
+      </p>
+
+      <section class="help-section">
+        <h2>Talking to Netra</h2>
+        <ul>
+          <li>
+            <b>Say "Hey Netra"</b> anytime, followed by what you want -
+            Netra is always listening for this.
+          </li>
+          <li>
+            <b>Double-tap anywhere on the screen</b> to start giving a voice
+            command immediately, without saying the wake word first.
+          </li>
+        </ul>
+      </section>
+
+      <section class="help-section">
+        <h2>Touch Gestures (work anywhere on screen)</h2>
+        <ul>
+          <li>
+            <b>Long-press and hold</b> for about one second to turn object
+            detection on or off.
+          </li>
+          <li>
+            <b>Double-tap</b> to start a voice command.
+          </li>
+          <li>
+            <b>Triple-tap quickly</b> to instantly read aloud any text in
+            front of the camera - great for medicine labels and documents.
+          </li>
+        </ul>
+      </section>
+
+      <section class="help-section">
+        <h2>Emergency</h2>
+        <ul>
+          <li>
+            <b>Shake your phone firmly</b> to immediately alert your
+            emergency contacts with your location.
+          </li>
+          <li>
+            <b>Say "Hey Netra, emergency"</b> or "I need help now" to do the
+            same thing by voice.
+          </li>
+        </ul>
+      </section>
+
+      <section class="help-section">
+        <h2>Useful things to say</h2>
+        <ul>
+          <li><b>"Take me to the library"</b> - start walking directions to any place.</li>
+          <li><b>"Where is my phone"</b> - hear where an object was last seen.</li>
+          <li><b>"Remember this place as bathroom"</b> - save your current location with a name.</li>
+          <li><b>"Where is the bathroom"</b> - get directions back to a saved place.</li>
+          <li><b>"Read this"</b> or "what does this say" - read text aloud.</li>
+          <li><b>"What did I say"</b> or "read my history" - hear your recent activity.</li>
+          <li>Ask any general question, like <b>"what's the capital of France"</b>.</li>
+        </ul>
+      </section>
+
+      <section class="help-section">
+        <h2>Opening the app without touching your phone screen</h2>
+        <ul>
+          <li>
+            <b>Voice assistant:</b> say "Hey Google, open Netra" on Android,
+            or "Hey Siri, open Netra" on iPhone - this works once the app
+            has been installed to your home screen.
+          </li>
+          <li>
+            <b>Back Tap:</b> a phone setting that opens the app when you tap
+            the back of your phone twice or three times. On Android, this is
+            under Settings, System, Gestures, Quick Tap. On iPhone, it's
+            under Settings, Accessibility, Touch, Back Tap. A sighted helper
+            needs to set this up once.
+          </li>
+          <li>
+            <b>NFC tag:</b> a small sticker, on a keychain or cane for
+            example, that opens the app the moment your phone touches it. A
+            sighted helper can set this up once using a free NFC writing
+            app.
+          </li>
+        </ul>
+      </section>
+
+      <section class="help-section">
+        <h2>Other buttons on the main screen</h2>
+        <ul>
+          <li>Home, Memory, History, and Settings are at the bottom of the screen for a sighted helper to use if needed.</li>
+          <li>Everything on this page can also be done by voice - you never need to find a specific button.</li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="help-controls">
+      <button class="btn-repeat" id="repeatBtn">Repeat</button>
+      <button class="btn-stop" id="stopBtn">Stop</button>
+      <a class="btn-back" href="/" id="backBtn">Back to App</a>
+    </div>
+
+    <script>
+      const helpScript = [
+        "Here are the shortcuts and instructions for using Netra.",
+        "Talking to Netra. Say Hey Netra anytime, followed by what you want. Or, double-tap anywhere on the screen to start giving a voice command immediately.",
+        "Touch gestures, which work anywhere on the screen. Long-press and hold for about one second to turn object detection on or off. Double-tap to start a voice command. Triple-tap quickly to instantly read aloud any text in front of the camera - great for medicine labels and documents.",
+        "Emergency. Shake your phone firmly to immediately alert your emergency contacts with your location. Or say Hey Netra, emergency, to do the same thing by voice.",
+        "Useful things to say. Take me to the library, to start walking directions. Where is my phone, to hear where an object was last seen. Remember this place as bathroom, to save a location. Where is the bathroom, to get directions back to it. Read this, to read text aloud. What did I say, to hear your recent activity. Or ask any general question.",
+        "Opening the app without touching your phone screen. Say Hey Google, open Netra, on Android, or Hey Siri, open Netra, on iPhone, once the app is installed to your home screen. Back Tap lets you open the app by tapping the back of your phone twice or three times - a sighted helper can set this up once in your phone's accessibility settings. An N F C tag is a small sticker that opens the app the moment your phone touches it - a sighted helper can also set this up once.",
+        "That's everything. You can say Repeat to hear this again, or go back to the app.",
+      ];
+
+      let currentIndex = 0;
+      let isSpeaking = false;
+
+      function speakNext() {
+        if (currentIndex >= helpScript.length) {
+          isSpeaking = false;
+          return;
+        }
+        const utterance = new SpeechSynthesisUtterance(helpScript[currentIndex]);
+        utterance.rate = 0.95;
+        utterance.onend = () => {
+          currentIndex++;
+          if (isSpeaking) speakNext();
+        };
+        speechSynthesis.speak(utterance);
+      }
+
+      function startReading() {
+        speechSynthesis.cancel();
+        currentIndex = 0;
+        isSpeaking = true;
+        speakNext();
+      }
+
+      function stopReading() {
+        isSpeaking = false;
+        speechSynthesis.cancel();
+      }
+
+      document.getElementById("repeatBtn").addEventListener("click", startReading);
+      document.getElementById("stopBtn").addEventListener("click", stopReading);
+      document.getElementById("backBtn").addEventListener("click", stopReading);
+
+      // Start reading automatically as soon as the page loads
+      window.addEventListener("load", () => {
+        setTimeout(startReading, 500);
+      });
+    </script>
+  </body>
+</html>

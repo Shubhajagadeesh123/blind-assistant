@@ -304,6 +304,16 @@ def onboarding():
     return render_template("onboarding.html")
 
 
+@app.route("/help")
+def help_page():
+    """Serve the shortcuts/instructions reference page"""
+    try:
+        return render_template("help.html")
+    except Exception as e:
+        logging.error(f"Error serving help.html: {e}")
+        return "Help page not found", 404
+
+
 @app.route("/tutorial")
 def tutorial():
     """Serve the onboarding tutorial page"""

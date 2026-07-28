@@ -29,9 +29,9 @@
 
     <script src="{{ url_for('static', filename='js/memory.js') }}"></script>
 
-   <link rel="manifest" href="/static/manifest.json" />
-<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png" />
-<meta name="theme-color" content="#0d1117" />
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}" />
+    <meta name="theme-color" content="#0d1117" />
   </head>
 
   <body>
@@ -195,6 +195,11 @@
                 <i class="fas fa-triangle-exclamation"></i>
 
                 <span data-i18n="emergencySos"> Emergency SOS </span>
+              </button>
+              <button id="helpBtn" class="action-card">
+                <i class="fas fa-circle-question"></i>
+
+                <span data-i18n="helpShortcuts"> Help &amp; Shortcuts </span>
               </button>
             </div>
 

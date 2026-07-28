@@ -889,6 +889,13 @@ class Netra {
       });
     }
 
+    const helpBtn = document.getElementById("helpBtn");
+    if (helpBtn) {
+      helpBtn.addEventListener("click", () => {
+        window.location.href = "/help";
+      });
+    }
+
     if (this.elements.languageSelect) {
       this.elements.languageSelect.addEventListener("change", (e) =>
         this.changeLanguage(e.target.value),
@@ -1634,6 +1641,22 @@ class Netra {
       return;
     }
 
+    if (
+      lower.includes("what are the shortcuts") ||
+      lower.includes("show shortcuts") ||
+      lower.includes("how do i use this") ||
+      lower.includes("how to use this app") ||
+      lower.includes("show me the instructions") ||
+      lower.includes("open instructions") ||
+      lower.includes("open help") ||
+      lower === "help" ||
+      lower === "instructions"
+    ) {
+      this.speak("Opening shortcuts and instructions.", true);
+      window.location.href = "/help";
+      return;
+    }
+
     if (this.isSavePlaceCommand(command)) {
       const placeName = this.extractPlaceNameToSave(command);
       if (placeName) {
@@ -1751,6 +1774,7 @@ class Netra {
         memory: "Memory",
         describeScene: "Describe Scene",
         emergencySos: "Emergency SOS",
+        helpShortcuts: "Help & Shortcuts",
         home: "Home",
         history: "History",
         settings: "Settings",
@@ -1769,6 +1793,7 @@ class Netra {
         memory: "स्मृति",
         describeScene: "दृश्य बताएं",
         emergencySos: "आपातकालीन एसओएस",
+        helpShortcuts: "सहायता और शॉर्टकट",
         home: "होम",
         history: "इतिहास",
         settings: "सेटिंग्स",
@@ -1787,6 +1812,7 @@ class Netra {
         memory: "ಸ್ಮರಣೆ",
         describeScene: "ದೃಶ್ಯವನ್ನು ವಿವರಿಸಿ",
         emergencySos: "ತುರ್ತು ಎಸ್‌ಒಎಸ್",
+        helpShortcuts: "ಸಹಾಯ ಮತ್ತು ಶಾರ್ಟ್‌ಕಟ್‌ಗಳು",
         home: "ಮುಖಪುಟ",
         history: "ಇತಿಹಾಸ",
         settings: "ಸಂಯೋಜನೆಗಳು",
@@ -1805,6 +1831,7 @@ class Netra {
         memory: "நினைவகம்",
         describeScene: "காட்சியை விவரிக்கவும்",
         emergencySos: "அவசர எஸ்ஓஎஸ்",
+        helpShortcuts: "உதவி மற்றும் குறுக்குவழிகள்",
         home: "முகப்பு",
         history: "வரலாறு",
         settings: "அமைப்புகள்",
@@ -1823,6 +1850,7 @@ class Netra {
         memory: "జ్ఞాపకం",
         describeScene: "దృశ్యాన్ని వివరించండి",
         emergencySos: "అత్యవసర ఎస్ఓఎస్",
+        helpShortcuts: "సహాయం మరియు షార్ట్‌కట్‌లు",
         home: "హోమ్",
         history: "చరిత్ర",
         settings: "సెట్టింగ్‌లు",
