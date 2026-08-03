@@ -111,10 +111,37 @@ class Netra {
     };
 
     // Detection settings
-    this.detectionThreshold = 0.5;
+    this.detectionThreshold = 0.45; // slightly lowered from 0.5 - small/
+    // distant objects naturally produce lower confidence scores even when
+    // correctly detected, so this threshold was silently filtering out
+    // some genuinely-correct small-object detections. This threshold
+    // controls what gets DRAWN/tracked, not what gets spoken - see below.
+
+    // What actually gets SPOKEN uses a separate, higher bar than what
+    // merely gets drawn. Lowering detectionThreshold to catch small
+    // objects necessarily also let through more low-confidence, more
+    // often WRONG detections - fine for drawing a box, not fine for
+    // confidently announcing something incorrect out loud. This keeps
+    // both benefits: small objects still get shown, but only confident
+    // detections get spoken about.
+    this.announcementConfidenceThreshold = 0.65;
+
+    // Temporal confirmation: an object must appear in at least this many
+    // of the last temporalConfirmWindow detection frames before it's
+    // trusted enough to announce. This filters out one-off single-frame
+    // misclassifications (a momentary wrong guess that doesn't repeat)
+    // while still letting real, persistent objects through within a
+    // second or so.
+    this.temporalConfirmWindow = 4;
+    this.temporalConfirmMinFrames = 2;
+    this.recentDetectionHistory = [];
     this.lastDetections = [];
     this.lastAnnouncement = 0;
-    this.announcementInterval = 5000; // 5 seconds between announcements
+    this.announcementInterval = 3500; // seconds between REPEAT announcements of an already-seen object
+    // First time an object is spotted, it gets a much shorter throttle
+    // than a repeat, so it feels near-instant instead of waiting behind
+    // the same gate as routine repeated narration.
+    this.firstSightingInterval = 800;
 
     // Smart object announcement tracking system
     this.objectAnnouncementCount = new Map(); // Track how many times each object was announced
@@ -554,6 +581,32 @@ class Netra {
   }
 
   /**
+   * Shared UI-element check used by every touch gesture system (long-press,
+   * double-tap, triple-tap). Previously each gesture handler had its own
+   * independently-written copy of this check, which could silently drift
+   * out of sync with each other over time - consolidated into one method
+   * so there's exactly one source of truth.
+   */
+  isGestureUIElement(target) {
+    if (!target) return false;
+    return !!(
+      target.tagName === "BUTTON" ||
+      target.tagName === "SELECT" ||
+      target.tagName === "INPUT" ||
+      target.closest("button") ||
+      target.closest("select") ||
+      target.closest("input") ||
+      target.closest(".btn") ||
+      (target.id && target.id.includes("Btn")) ||
+      (target.className &&
+        typeof target.className === "string" &&
+        (target.className.includes("btn") ||
+          target.className.includes("form-control") ||
+          target.className.includes("form-select")))
+    );
+  }
+
+  /**
    * Setup mobile double-tap (voice command) and triple-tap (instant read
    * text / OCR) gesture detection, sharing the same tap counter.
    */
@@ -570,11 +623,44 @@ class Netra {
       "Setting up mobile double-tap (voice) / triple-tap (read text) gesture detection...",
     );
 
+    // Reset the tap counter cleanly on touchcancel, which fires INSTEAD OF
+    // touchend in common real-device scenarios (OS gesture interception,
+    // scrolling, multi-touch confusion). Without this, a cancelled tap
+    // left tapCount in a stale state for up to 400ms, silently causing the
+    // next real tap to be miscounted.
+    document.addEventListener(
+      "touchcancel",
+      () => {
+        if (tapTimeout) {
+          clearTimeout(tapTimeout);
+          tapTimeout = null;
+        }
+        tapCount = 0;
+        firstTapTime = 0;
+      },
+      { passive: true },
+    );
+
     // Add touch event listener to entire document for full-screen gestures
     document.addEventListener(
       "touchend",
       (e) => {
         const currentTime = Date.now();
+
+        // A long-press (a separate gesture system) just fired on this
+        // exact touch - ignore this touchend entirely and reset the tap
+        // counter, so it doesn't get miscounted as "tap 1" and cause a
+        // stray double/triple-tap misfire from a quick tap shortly after.
+        if (this._longPressJustFired) {
+          this._longPressJustFired = false;
+          if (tapTimeout) {
+            clearTimeout(tapTimeout);
+            tapTimeout = null;
+          }
+          tapCount = 0;
+          firstTapTime = 0;
+          return;
+        }
 
         // Clear existing timeout
         if (tapTimeout) {
@@ -584,18 +670,7 @@ class Netra {
 
         // Prevent interference with UI elements that need single taps
         const target = e.target;
-        const isUIElement =
-          target.tagName === "BUTTON" ||
-          target.tagName === "SELECT" ||
-          target.tagName === "INPUT" ||
-          target.closest("button") ||
-          target.closest("select") ||
-          target.closest("input") ||
-          target.closest(".btn") ||
-          target.id.includes("Btn") ||
-          target.className.includes("btn") ||
-          target.classList.contains("form-control") ||
-          target.classList.contains("form-select");
+        const isUIElement = this.isGestureUIElement(target);
 
         // Skip gesture detection on UI elements
         if (isUIElement) {
@@ -686,17 +761,7 @@ class Netra {
       "touchstart",
       (e) => {
         // Only prevent default on non-UI elements during potential double-tap
-        const target = e.target;
-        const isUIElement =
-          target.tagName === "BUTTON" ||
-          target.tagName === "SELECT" ||
-          target.tagName === "INPUT" ||
-          target.closest("button") ||
-          target.closest("select") ||
-          target.closest("input") ||
-          target.closest(".btn") ||
-          target.id.includes("Btn") ||
-          target.className.includes("btn");
+        const isUIElement = this.isGestureUIElement(e.target);
 
         if (!isUIElement && tapCount === 1) {
           // During potential double-tap sequence, prevent default behaviors
@@ -723,29 +788,20 @@ class Netra {
    */
   setupMobileLongPress() {
     const LONG_PRESS_MS = 800;
-    const MOVE_TOLERANCE_PX = 15;
+    // Loosened from 15px - natural finger tremor during a real hold
+    // easily exceeds a tight tolerance, causing legitimate long-presses
+    // to silently cancel. 30px is much more forgiving while still
+    // distinguishing a genuine long-press from an intentional swipe/scroll.
+    const MOVE_TOLERANCE_PX = 30;
     let pressTimer = null;
     let startX = 0;
     let startY = 0;
     let longPressFired = false;
 
-    const isUIElement = (target) =>
-      target.tagName === "BUTTON" ||
-      target.tagName === "SELECT" ||
-      target.tagName === "INPUT" ||
-      target.closest("button") ||
-      target.closest("select") ||
-      target.closest("input") ||
-      target.closest(".btn") ||
-      (target.id && target.id.includes("Btn")) ||
-      (target.className &&
-        typeof target.className === "string" &&
-        target.className.includes("btn"));
-
     document.addEventListener(
       "touchstart",
       (e) => {
-        if (isUIElement(e.target)) return;
+        if (this.isGestureUIElement(e.target)) return;
 
         const touch = e.touches[0];
         startX = touch.clientX;
@@ -754,6 +810,11 @@ class Netra {
 
         pressTimer = setTimeout(() => {
           longPressFired = true;
+          this._longPressJustFired = true; // shared flag - tells the
+          // double-tap/triple-tap counter (a separate gesture system) to
+          // ignore the touchend that's about to follow, so a long-press
+          // release doesn't get miscounted as "tap 1" and cause a stray
+          // double-tap misfire from a quick tap shortly afterward.
           this.toggleDetection();
         }, LONG_PRESS_MS);
       },
@@ -776,21 +837,26 @@ class Netra {
 
     document.addEventListener("touchmove", cancelPress, { passive: true });
 
-    document.addEventListener(
-      "touchend",
-      () => {
-        if (pressTimer) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
-        }
-        // Prevent the long-press from also being interpreted as one half
-        // of a double-tap for voice commands.
-        if (longPressFired) {
-          longPressFired = false;
-        }
-      },
-      { passive: true },
-    );
+    const endPress = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      // Prevent the long-press from also being interpreted as one half
+      // of a double-tap for voice commands.
+      if (longPressFired) {
+        longPressFired = false;
+      }
+    };
+
+    document.addEventListener("touchend", endPress, { passive: true });
+    // touchcancel fires INSTEAD OF touchend in common real-device
+    // scenarios - the OS intercepting the gesture, scrolling threshold
+    // exceeded, multi-touch confusion, a notification pulling down, etc.
+    // Without handling it, a pending long-press timer never gets cleared
+    // in these cases, causing a delayed/unexpected toggle later. This was
+    // previously unhandled entirely.
+    document.addEventListener("touchcancel", endPress, { passive: true });
 
     console.log(
       "Mobile long-press gesture enabled for toggling object detection",
@@ -940,14 +1006,14 @@ class Netra {
 
       // Ctrl + key shortcuts
       if (e.ctrlKey) {
-        switch (e.key) {
+        switch (e.key.toLowerCase()) {
           case "s":
             e.preventDefault();
-            if (this.isDetecting) {
-              this.stopDetection();
-            } else {
-              this.startDetection();
-            }
+            // Use toggleDetection() (not separate start/stop calls) so
+            // this gives the same spoken confirmation as the mobile
+            // long-press gesture does - previously this was silent, which
+            // leaves a blind user with no way to know it actually worked.
+            this.toggleDetection();
             break;
           case "v":
             e.preventDefault();
@@ -957,6 +1023,26 @@ class Netra {
             e.preventDefault();
             this.requestLocation();
             break;
+        }
+
+        // Ctrl+Shift combos - kept separate from the single-Ctrl switch
+        // above to avoid colliding with browser-reserved shortcuts like
+        // Ctrl+R (reload) or Ctrl+T (new tab), which cannot be reliably
+        // overridden by a webpage.
+        if (e.shiftKey) {
+          switch (e.key.toLowerCase()) {
+            case "o":
+              // Desktop equivalent of the mobile triple-tap gesture - this
+              // gap existed before (mobile had it, desktop didn't).
+              e.preventDefault();
+              this.captureAndReadText();
+              break;
+            case "e":
+              // Desktop equivalent of the mobile shake-to-trigger gesture.
+              e.preventDefault();
+              this.triggerSOS();
+              break;
+          }
         }
       }
     });
@@ -1356,11 +1442,14 @@ class Netra {
 
   /**
    * Handle volume up key press - toggles object detection on/off.
-   * Note: on most real phone browsers (Chrome/Android, Safari/iOS) the OS
+   * Note: this is a best-effort bonus, not a guaranteed shortcut, on
+   * EITHER platform. On real phones (Chrome/Android, Safari/iOS) the OS
    * intercepts the physical volume rocker before it ever reaches page
-   * JavaScript, so this only reliably fires on desktop keyboards or certain
-   * locked-down/kiosk devices. See setupMobileLongPress() for the gesture
-   * that actually works on phones.
+   * JavaScript. On desktop, dedicated multimedia volume keys are also
+   * often intercepted by the OS for system volume, and support for the
+   * few browsers/keyboards that do pass it through varies. The actually
+   * guaranteed shortcuts for this same action are: long-press anywhere
+   * on mobile (setupMobileLongPress), and Ctrl+S on desktop.
    */
   handleVolumeUpPress() {
     console.log("Volume Up key pressed - toggling object detection");
@@ -2439,10 +2528,14 @@ class Netra {
     }
 
     try {
-      // Perform detection on the full frame
-      let predictions = await this.model.detect(this.video, 25, 0.5);
+      // Perform detection on the full frame. minScore here (0.4) is
+      // intentionally slightly below this.detectionThreshold (0.45) -
+      // otherwise the model would discard borderline small/distant object
+      // detections before the final threshold ever got a chance to see
+      // them, silently defeating the point of lowering that threshold.
+      let predictions = await this.model.detect(this.video, 25, 0.4);
 
-      // Every 3rd frame, ALSO run a zoomed center-crop detection pass.
+      // Every 2nd frame, ALSO run a zoomed center-crop detection pass.
       // COCO-SSD internally resizes every input down to a small fixed
       // resolution before running inference, so simply increasing camera
       // resolution doesn't fully help small/distant objects - they still
@@ -2450,10 +2543,9 @@ class Netra {
       // the center of the frame and scaling that crop back up makes small
       // objects occupy proportionally more of the model's fixed input
       // size, meaningfully improving detection of things that are small
-      // or far away. Only running this every 3rd frame (not every frame)
-      // keeps the extra inference cost reasonable.
+      // or far away.
       this.detectionFrameCount = (this.detectionFrameCount || 0) + 1;
-      if (this.detectionFrameCount % 3 === 0) {
+      if (this.detectionFrameCount % 2 === 0) {
         const zoomedPredictions = await this.detectZoomedCenter();
         predictions = this.mergeDetections(predictions, zoomedPredictions);
       }
@@ -2462,20 +2554,36 @@ class Netra {
       // Clear previous drawings
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-      // Filter predictions by confidence threshold
+      // Filter predictions by confidence threshold - this lower bar (0.45)
+      // is what gets DRAWN and tracked, which is what makes small/distant
+      // objects visible at all.
       const validPredictions = predictions.filter(
         (prediction) => prediction.score >= this.detectionThreshold,
       );
 
       if (validPredictions.length > 0) {
         this.drawPredictions(validPredictions);
-
-        // Update object tracking and announce with smart system
         this.updateObjectTracking(validPredictions);
-        this.announceDetectionsSmart(validPredictions);
+
+        // What actually gets SPOKEN uses a stricter, two-part check on
+        // top of validPredictions:
+        // 1. A higher confidence bar than what's merely drawn - a lower
+        //    threshold helps small objects get detected/shown, but
+        //    speaking about anything the model is only 45% sure about
+        //    means confidently announcing things that are often wrong.
+        // 2. Temporal confirmation - the object must show up consistently
+        //    across recent frames, not just once. A single-frame
+        //    misclassification (a flicker) won't survive this, but a
+        //    real object that's actually there will.
+        const confirmedForAnnouncement =
+          this.getConfirmedAnnouncementPredictions(predictions);
+        if (confirmedForAnnouncement.length > 0) {
+          this.announceDetectionsSmart(confirmedForAnnouncement);
+        }
       } else {
         // No objects detected, update tracking for disappearances
         this.updateObjectTracking([]);
+        this.getConfirmedAnnouncementPredictions([]); // still advance history with an empty frame
       }
 
       // Continue detection loop
@@ -2489,6 +2597,67 @@ class Netra {
         setTimeout(() => this.detectObjects(), 100);
       }
     }
+  }
+
+  /**
+   * Decide which detections are trustworthy enough to actually speak
+   * about, as opposed to merely drawing on screen. Two checks:
+   *   1. A higher confidence bar (this.announcementConfidenceThreshold)
+   *      than the general drawing/tracking threshold.
+   *   2. Temporal confirmation - the class must appear in at least
+   *      this.temporalConfirmMinFrames of the last
+   *      this.temporalConfirmWindow detection frames. This filters out
+   *      one-off single-frame misclassifications (a momentary wrong
+   *      guess that doesn't repeat), while still letting real, persistent
+   *      objects through quickly.
+   */
+  getConfirmedAnnouncementPredictions(allPredictions) {
+    if (!this.recentDetectionHistory) {
+      this.recentDetectionHistory = [];
+    }
+
+    const highConfidenceThisFrame = allPredictions.filter(
+      (p) => p.score >= this.announcementConfidenceThreshold,
+    );
+
+    // Record which classes were high-confidence this frame
+    const classesThisFrame = new Set(
+      highConfidenceThisFrame.map((p) => p.class),
+    );
+    this.recentDetectionHistory.push(classesThisFrame);
+    if (this.recentDetectionHistory.length > this.temporalConfirmWindow) {
+      this.recentDetectionHistory.shift();
+    }
+
+    // Count how many of the recent frames each class appeared in
+    const classFrameCounts = new Map();
+    for (const frameClasses of this.recentDetectionHistory) {
+      for (const cls of frameClasses) {
+        classFrameCounts.set(cls, (classFrameCounts.get(cls) || 0) + 1);
+      }
+    }
+
+    // A class is "confirmed" if it showed up consistently enough across
+    // recent frames - not just once.
+    const confirmedClasses = new Set(
+      [...classFrameCounts.entries()]
+        .filter(([, count]) => count >= this.temporalConfirmMinFrames)
+        .map(([cls]) => cls),
+    );
+
+    if (confirmedClasses.size === 0) return [];
+
+    // Return the current frame's best (highest-confidence) instance of
+    // each confirmed class.
+    const result = [];
+    for (const cls of confirmedClasses) {
+      const matches = highConfidenceThisFrame.filter((p) => p.class === cls);
+      if (matches.length > 0) {
+        const best = matches.reduce((a, b) => (a.score > b.score ? a : b));
+        result.push(best);
+      }
+    }
+    return result;
   }
 
   /**
@@ -2507,7 +2676,9 @@ class Netra {
       // Crop the center 55% of the frame and scale it up to fill the
       // full frame size before detecting - this is what makes small/
       // distant objects appear proportionally larger to the model.
-      const cropRatio = 0.55;
+      const cropRatio = 0.45; // tightened from 0.55 - a more aggressive
+      // zoom makes small/distant objects occupy proportionally more of
+      // the model's fixed input resolution, improving detection further.
       const cropW = vw * cropRatio;
       const cropH = vh * cropRatio;
       const cropX = (vw - cropW) / 2;
@@ -2524,7 +2695,7 @@ class Netra {
       const zoomedPredictions = await this.model.detect(
         this.zoomCanvas,
         20,
-        0.5,
+        0.4,
       );
 
       // Remap bbox coordinates from the zoomed-canvas space back into
@@ -2701,14 +2872,24 @@ class Netra {
   announceDetectionsSmart(predictions) {
     const now = Date.now();
 
+    // Obstacle/danger warnings run on EVERY frame, completely independent
+    // of the general announcement throttle below - safety warnings should
+    // never wait behind a cooldown meant only for descriptive narration.
+    // (Previously this call was placed after the throttle's early return,
+    // so it was actually being silently gated by it too, contradicting
+    // its own comment - fixed here.)
+    const justWarnedClass = this.checkObstacleWarning(predictions);
+
+    // Save detected objects to memory - also independent of the
+    // announcement throttle.
+    predictions.forEach((prediction) => {
+      this.autoSaveMemory(prediction);
+    });
+
     const currentInterval =
       this.isNavigating && this.currentRoute
         ? this.announcementInterval * 1.5
         : this.announcementInterval;
-
-    if (now - this.lastAnnouncement < currentInterval) {
-      return;
-    }
 
     // Priority objects (most important for navigation)
     const priorityObjects = [
@@ -2721,8 +2902,19 @@ class Netra {
       "motorcycle",
     ];
 
-    // Filter predictions that can be announced based on smart tracking
+    // Filter predictions that can be announced based on smart tracking.
+    // A brand-new object (never announced before) is allowed through
+    // using a much shorter throttle than a repeat announcement, so
+    // spotting something for the first time feels near-instant rather
+    // than waiting behind the same 5-second gate as routine repeats.
     const announcablePredictions = predictions.filter((prediction) => {
+      // Already warned about this exact object in this same detection
+      // cycle (via checkObstacleWarning above) - don't also queue a
+      // redundant regular narration for it right on top of that.
+      if (justWarnedClass && prediction.class === justWarnedClass) {
+        return false;
+      }
+
       const announcementCount =
         this.objectAnnouncementCount.get(prediction.class) || 0;
 
@@ -2738,15 +2930,16 @@ class Netra {
         return false; // Object reappeared too quickly, don't announce
       }
 
+      const isFirstSighting = announcementCount === 0;
+      const effectiveInterval = isFirstSighting
+        ? this.firstSightingInterval
+        : currentInterval;
+
+      if (now - this.lastAnnouncement < effectiveInterval) {
+        return false;
+      }
+
       return true;
-    });
-
-    // Always check for nearby obstacles regardless of announcement cooldown
-    this.checkObstacleWarning(predictions);
-
-    // Save detected objects to memory
-    predictions.forEach((prediction) => {
-      this.autoSaveMemory(prediction);
     });
 
     if (announcablePredictions.length === 0) {
@@ -3319,35 +3512,51 @@ class Netra {
       return;
     }
 
+    const dangerObjects = [
+      "person",
+      "chair",
+      "table",
+      "car",
+      "truck",
+      "bus",
+      "motorcycle",
+      "bicycle",
+      "dog",
+      "stairs",
+    ];
+
     for (const object of objects) {
+      // Share the same per-object announcement budget as regular
+      // narration (announceDetectionsSmart) - previously this system had
+      // NO cap at all, only a 4-second cooldown, so an object that stayed
+      // close (e.g. a person standing still) would get warned about every
+      // 4 seconds indefinitely. Now the same object gets at most
+      // maxAnnouncements (3) total mentions, whether from this warning or
+      // regular narration, before going silent until it's gone long
+      // enough to reset or a genuinely different object shows up.
+      const announcementCount =
+        this.objectAnnouncementCount.get(object.class) || 0;
+      if (announcementCount >= this.maxAnnouncements) {
+        continue;
+      }
+
       const distance = this.estimateDistance(object.bbox);
       const position = this.getRelativePosition(object.bbox);
-
-      const dangerObjects = [
-        "person",
-        "chair",
-        "table",
-        "car",
-        "truck",
-        "bus",
-        "motorcycle",
-        "bicycle",
-        "dog",
-        "stairs",
-      ];
 
       if (
         dangerObjects.includes(object.class) &&
         (distance.includes("very close") || distance.includes("close"))
       ) {
         this.lastObstacleAlert = now;
+        this.objectAnnouncementCount.set(object.class, announcementCount + 1);
         this.speak(
           `Warning. ${object.class} ${position}. Please be careful.`,
           true,
         );
-        break;
+        return object.class;
       }
     }
+    return null;
   }
   /* ==========================================
        Ask Gemini About Current Scene

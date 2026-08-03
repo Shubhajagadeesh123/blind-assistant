@@ -1299,60 +1299,7 @@ class UniversalNavigation {
     }
 
     // Check if user reached current step
-    this.checkStepProgress();
-  }
-
-  /**
-   * Check if user has reached the current step
-   */
-  checkStepProgress() {
-    if (!this.isNavigating || !this.currentRoute) return;
-
-    const steps = this.currentRoute.route.steps;
-    if (this.currentStepIndex >= steps.length) return;
-
-    const currentStep = steps[this.currentStepIndex];
-    const targetLocation = currentStep.end_location;
-
-    const distance = this.calculateDistance(
-      {
-        lat: this.currentPosition.latitude,
-        lng: this.currentPosition.longitude,
-      },
-      { lat: targetLocation.lat, lng: targetLocation.lng },
-    );
-
-    // If within threshold, move to next step
-    if (distance <= this.config.stepProximityThreshold) {
-      this.currentStepIndex++;
-
-      if (this.currentStepIndex >= steps.length) {
-        this.navigationComplete();
-      } else {
-        // Announce next step after a brief pause
-        setTimeout(() => {
-          this.announceCurrentStep();
-        }, 1000);
-      }
-    }
-  }
-
-  /**
-   * Calculate distance between two coordinates (Haversine formula)
-   */
-  calculateDistance(pos1, pos2) {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = (pos1.lat * Math.PI) / 180;
-    const φ2 = (pos2.lat * Math.PI) / 180;
-    const Δφ = ((pos2.lat - pos1.lat) * Math.PI) / 180;
-    const Δλ = ((pos2.lng - pos1.lng) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c; // Distance in meters
+    this.checkStepProgress(newPosition.latitude, newPosition.longitude);
   }
 
   /**
